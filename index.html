@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Dernière mise à jour : 06/03/2026 08:45:25 -->
+<!-- Dernière mise à jour : 06/03/2026 09:00:33 -->
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -658,6 +658,48 @@
         .stat-month-label { font-size:.6rem; color:#555; margin-top:4px; white-space:nowrap; overflow:hidden;
                             text-overflow:ellipsis; width:100%; text-align:center; }
 
+        /* ── Traducteurs panel ── */
+        .trad-panel { display:none; padding:24px; max-width:1100px; margin:0 auto; }
+        .trad-panel.visible { display:block; }
+        .trad-search-bar-wrap { padding:0 0 16px; }
+        #tradSearch { width:100%; max-width:400px; padding:7px 12px; border-radius:8px;
+                      background:#1e2736; border:1px solid #334155; color:#e2e8f0; font-size:.9rem; }
+        .trad-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; }
+        .trad-card { background:#1a1a2e; border:1px solid #222; border-radius:10px; padding:16px;
+                     cursor:pointer; transition:border-color .2s, transform .2s; }
+        .trad-card:hover { border-color:#e94560; transform:translateY(-2px); }
+        .trad-card-name { font-size:1rem; font-weight:700; color:#e94560; margin-bottom:10px; }
+        .trad-card-stats { display:flex; gap:8px; margin-bottom:10px; }
+        .trad-stat { flex:1; text-align:center; background:#0f0f1a; border-radius:8px; padding:8px 4px;
+                     border:1px solid #16213e; }
+        .trad-stat-value { font-size:1.25rem; font-weight:700; color:#6ea8fe; }
+        .trad-stat-label { font-size:.65rem; color:#555; margin-top:2px; }
+        .trad-card-meta { font-size:.78rem; color:#888; line-height:1.7; margin-top:6px; }
+        .trad-card-meta span { color:#aaa; }
+        .trad-loading { color:#888; text-align:center; padding:40px; }
+
+        /* ── Traducteur modal ── */
+        #trad-modal .modal-box { max-width:520px; display:flex; flex-direction:column; max-height:85vh; overflow:hidden; }
+        #trad-modal .modal-body { overflow-y:auto; padding-top:20px; flex:1; }
+        .trad-modal-name { font-size:1.1rem; font-weight:700; color:#e94560; margin-bottom:12px; }
+        .trad-modal-stats { display:flex; gap:10px; margin-bottom:12px; }
+        .trad-modal-stat { flex:1; text-align:center; background:#0f0f1a; border:1px solid #222;
+                           border-radius:8px; padding:10px; }
+        .trad-modal-stat-value { font-size:1.5rem; font-weight:700; color:#6ea8fe; }
+        .trad-modal-stat-label { font-size:.7rem; color:#666; margin-top:2px; }
+        .trad-modal-meta { font-size:.82rem; color:#888; margin-bottom:14px; line-height:1.7; }
+        .trad-modal-meta span { color:#aaa; }
+        .trad-games-section { margin-top:12px; }
+        .trad-games-section + .trad-games-section { margin-top:16px; }
+        .trad-games-title { font-size:.73rem; color:#64748b; text-transform:uppercase; letter-spacing:.06em;
+                            margin-bottom:6px; border-bottom:1px solid #1e2736; padding-bottom:4px; }
+        .trad-game-link { display:flex; align-items:center; justify-content:space-between; padding:5px 0;
+                          border-bottom:1px solid #1e273611; font-size:.85rem; color:#6ea8fe;
+                          text-decoration:none; transition:color .15s; }
+        .trad-game-link:hover { color:#93c5fd; }
+        .trad-game-statut { font-size:.7rem; color:#555; white-space:nowrap; margin-left:8px; flex-shrink:0; }
+        .trad-modal-empty { font-size:.82rem; color:#555; padding:8px 0; font-style:italic; }
+
     </style>
 </head>
 <body>
@@ -674,6 +716,7 @@
             <button class="nav-tab active" id="tabJeux">Jeux</button>
             <button class="nav-tab" id="tabMaj">Mises &agrave; jour</button>
             <button class="nav-tab" id="tabInfo">Informations</button>
+            <button class="nav-tab" id="tabTrad">Traducteurs / Relecteurs</button>
             <button class="nav-tab" id="tabStats">Statistiques</button>
         </div>
         <div class="controls" id="controls">
@@ -723,6 +766,14 @@
         <div id="infoContent"></div>
     </div>
 
+    <div class="trad-panel" id="tradPanel">
+        <div class="trad-search-bar-wrap">
+            <input type="text" id="tradSearch" placeholder="Rechercher un contributeur...">
+        </div>
+        <div class="trad-loading" id="tradLoading">Chargement des contributeurs...</div>
+        <div class="trad-grid" id="tradGrid"></div>
+    </div>
+
     <div class="stats-panel" id="statsPanel">
         <div id="statsContent"></div>
     </div>
@@ -745,6 +796,19 @@
             </div>
         </div>
     </template>
+
+    <!-- Modal traducteur -->
+    <div class="modal-overlay" id="trad-modal" onclick="if(event.target===this)closeTradModal()">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeTradModal()">✕</button>
+            <div class="modal-body">
+                <div class="trad-modal-name" id="trad-modal-name"></div>
+                <div class="trad-modal-stats" id="trad-modal-stats"></div>
+                <div class="trad-modal-meta" id="trad-modal-meta"></div>
+                <div id="trad-modal-games"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal jeu -->
     <div class="modal-overlay" id="game-modal" onclick="if(event.target===this)closeGameModal()">
