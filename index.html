@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Dernière mise à jour : 06/03/2026 07:54:42 -->
+<!-- Dernière mise à jour : 06/03/2026 08:00:24 -->
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -592,12 +592,13 @@
                      background:#1e2736; border:1px solid #334155; color:#e2e8f0; font-size:.9rem; }
 
         /* ── Modal nav ── */
-        .modal-nav { position:absolute; top:50%; transform:translateY(-50%); background:#1e2736cc;
-                     border:1px solid #334155; color:#e2e8f0; font-size:1.8rem; border-radius:50%;
-                     width:38px; height:38px; cursor:pointer; z-index:10; display:flex;
-                     align-items:center; justify-content:center; }
-        .modal-prev { left:6px; } .modal-next { right:6px; }
-        .modal-nav:disabled { opacity:.25; cursor:default; }
+        .modal-nav { position:absolute; top:50%; transform:translateY(-50%); background:transparent;
+                     border:none; color:#e2e8f066; font-size:1.4rem; border-radius:50%;
+                     width:32px; height:32px; cursor:pointer; z-index:10; display:flex;
+                     align-items:center; justify-content:center; transition:color .2s; }
+        .modal-nav:hover { color:#e2e8f0; }
+        .modal-prev { left:4px; } .modal-next { right:4px; }
+        .modal-nav:disabled { opacity:.18; cursor:default; }
 
         /* ── Modal history ── */
         .modal-history { margin-top:14px; border-top:1px solid #334155; padding-top:10px; }
@@ -611,9 +612,6 @@
                       transition:border-color 0.2s, color 0.2s; }
         #viewToggle:hover { border-color:#e94560; color:#e94560; }
 
-        /* ── Info button on card ── */
-        .btn-info { background:none; border:1px solid #334155; color:#6ea8fe; cursor:pointer; }
-        .btn-info:hover { background:#1e3a5f33; opacity:1; }
     </style>
 </head>
 <body>
@@ -1113,14 +1111,6 @@
             badge.textContent = game.lien_trad;
             linksEl.appendChild(badge);
         }
-
-        // Bouton info modal
-        const infoBtn = document.createElement('button');
-        infoBtn.className = 'btn btn-info';
-        infoBtn.textContent = 'ℹ';
-        infoBtn.title = 'Voir détails';
-        infoBtn.dataset.navIdx = navIdx;
-        linksEl.appendChild(infoBtn);
 
         return clone;
     }
@@ -1763,11 +1753,6 @@
     grid.addEventListener('click', e => {
         const chip = e.target.closest('.tag-chip');
         if (chip) { searchInput.value = chip.dataset.tag; render(); }
-        const infoBtn = e.target.closest('.btn-info');
-        if (infoBtn) {
-            const idx = parseInt(infoBtn.dataset.navIdx);
-            openGameModal(idx, currentFiltered);
-        }
     });
 
     // View toggle
