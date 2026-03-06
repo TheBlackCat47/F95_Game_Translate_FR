@@ -31,7 +31,10 @@ Les données proviennent d'un tableur Google Sheets maintenu par la communauté 
 
 ## 🗂️ Structure des données
 
-Les données sont exportées au format CSV après chaque synchronisation :
+Les données proviennent du tableur communautaire Google Sheets :
+📊 **[Game Translate FR — Google Sheets](https://docs.google.com/spreadsheets/d/1ELRF0kpF8SoUlslX5ZXZoG4WXeWST6lN9bLws32EPfs)**
+
+Elles sont exportées au format CSV après chaque synchronisation :
 
 - [`data/jeux.csv`](data/jeux.csv) — Catalogue complet des jeux traduits
 - [`data/maj.csv`](data/maj.csv) — Historique des mises à jour
