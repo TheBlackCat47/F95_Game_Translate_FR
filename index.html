@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Dernière mise à jour : 06/03/2026 20:21:48 -->
+<!-- Dernière mise à jour : 06/03/2026 20:56:12 -->
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -640,6 +640,27 @@
         /* ── Stats panel ── */
         .stats-panel { display:none; padding:24px; max-width:900px; margin:0 auto; }
         .stats-panel.visible { display:block; }
+
+        /* ── News panel ── */
+        .news-panel { display:none; padding:20px 0; }
+        .news-panel.visible { display:block; }
+        .news-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+        @media(max-width:900px) { .news-grid { grid-template-columns:repeat(2,1fr); } }
+        @media(max-width:560px) { .news-grid { grid-template-columns:1fr; } }
+        .news-card { background:#111827; border:1px solid #1f2d40; border-radius:10px; overflow:hidden;
+                     cursor:pointer; text-decoration:none; color:inherit; display:flex;
+                     flex-direction:column; transition:transform .15s, border-color .15s; }
+        .news-card:hover { transform:translateY(-2px); border-color:#2d4a6a; }
+        .news-card-img-wrap { line-height:0; }
+        .news-card-img { width:100%; aspect-ratio:16/9; object-fit:cover; background:#0d1420; display:block; }
+        .news-card-body { padding:12px; flex:1; display:flex; flex-direction:column; gap:6px; }
+        .news-category { display:inline-block; padding:2px 8px; border-radius:4px;
+                         font-size:.68rem; font-weight:700; width:fit-content; }
+        .news-title { font-size:.85rem; font-weight:600; color:#e2e8f0; line-height:1.4;
+                      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .news-meta { display:flex; align-items:center; gap:10px; font-size:.72rem;
+                     color:#64748b; margin-top:auto; flex-wrap:wrap; }
+        .news-updated { text-align:right; font-size:.72rem; color:#475569; padding:8px 4px 0; }
         .stat-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin-bottom:32px; }
         .stat-card { background:#1a1a2e; border:1px solid #222; border-radius:10px; padding:16px; text-align:center; }
         .stat-card-value { font-size:2rem; font-weight:700; color:#e94560; }
@@ -719,6 +740,7 @@
             <button class="nav-tab" id="tabInfo">Informations</button>
             <button class="nav-tab" id="tabTrad">Traducteurs / Relecteurs</button>
             <button class="nav-tab" id="tabStats">Statistiques</button>
+            <button class="nav-tab" id="tabNews">F95 — News</button>
         </div>
         <div class="controls" id="controls">
             <input type="text" id="search" placeholder="Rechercher un jeu, tag, traducteur...">
@@ -777,6 +799,12 @@
 
     <div class="stats-panel" id="statsPanel">
         <div id="statsContent"></div>
+    </div>
+
+    <div class="news-panel" id="newsPanel">
+        <div id="newsLoading" style="text-align:center;padding:40px;color:#64748b">Chargement des actualités F95Zone…</div>
+        <div class="news-grid" id="newsGrid" style="display:none"></div>
+        <div class="news-updated" id="newsUpdated" style="display:none"></div>
     </div>
 
     <button class="back-to-top" id="backToTop" title="Retour en haut">&uarr;</button>
@@ -2093,6 +2121,9 @@
     const infoPanel  = document.getElementById('infoPanel');
     const tradPanel  = document.getElementById('tradPanel');
     const statsPanel = document.getElementById('statsPanel');
+    const newsPanel  = document.getElementById('newsPanel');
+    const tabNews    = document.getElementById('tabNews');
+    let newsLoaded   = false;
     const infoLoading= document.getElementById('infoLoading');
     const infoContent= document.getElementById('infoContent');
     const majLoading = document.getElementById('majLoading');
@@ -2101,12 +2132,93 @@
 
     let controlsCollapsed = false;
 
+    // ── Onglet F95 — News ─────────────────────────────────────────────────────
+
+    const NEWS_CAT_COLORS = {
+        'Games':              { bg: '#1e3a5f', color: '#60a5fa', border: '#2563eb44' },
+        'Mods':               { bg: '#2d1f4e', color: '#a78bfa', border: '#7c3aed44' },
+        'Comics':             { bg: '#14382e', color: '#34d399', border: '#10b98144' },
+        'Asset Releases':     { bg: '#2d2005', color: '#fbbf24', border: '#d9770644' },
+        'Asset Requests':     { bg: '#2d2005', color: '#fbbf24', border: '#d9770644' },
+        'Animations & Loops': { bg: '#2d0f25', color: '#f472b6', border: '#db277744' },
+    };
+
+    function newsCatStyle(cat) {
+        const c = NEWS_CAT_COLORS[cat] || { bg: '#1a2535', color: '#94a3b8', border: '#33445544' };
+        return `background:${c.bg};color:${c.color};border:1px solid ${c.border}`;
+    }
+
+    function newsFormatDate(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        if (isNaN(d)) return '';
+        const diff = Date.now() - d.getTime();
+        if (diff < 3600000)  return `il y a ${Math.floor(diff / 60000)}min`;
+        if (diff < 86400000) return `il y a ${Math.floor(diff / 3600000)}h`;
+        return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function renderNews(items) {
+        const grid = document.getElementById('newsGrid');
+        if (!items.length) {
+            grid.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b">Aucune actualité disponible.</div>';
+            grid.style.display = '';
+            return;
+        }
+        grid.innerHTML = items.map(item => {
+            // Les chemins /data/... sont absolus côté serveur, on les rend relatifs pour GitHub Pages
+            const imgSrc = item.imageUrl ? item.imageUrl.replace(/^\//, './') : null;
+            const img = imgSrc
+                ? `<div class="news-card-img-wrap"><img class="news-card-img" src="${escapeHtml(imgSrc)}" loading="lazy" alt="" onerror="this.parentNode.style.display='none'"></div>`
+                : '';
+            const cat = item.category
+                ? `<span class="news-category" style="${newsCatStyle(item.category)}">${escapeHtml(item.category)}</span>`
+                : '';
+            const ago  = newsFormatDate(item.pubDate);
+            const cmts = item.comments > 0
+                ? `<span>💬 ${item.comments.toLocaleString('fr-FR')}</span>`
+                : '';
+            return `<a class="news-card" href="${escapeHtml(item.link)}" target="_blank" rel="noopener">
+                ${img}
+                <div class="news-card-body">
+                    ${cat}
+                    <div class="news-title">${escapeHtml(item.title)}</div>
+                    <div class="news-meta">
+                        ${item.author ? `<span>👤 ${escapeHtml(item.author)}</span>` : ''}
+                        ${ago ? `<span>🕐 ${ago}</span>` : ''}
+                        ${cmts}
+                    </div>
+                </div>
+            </a>`;
+        }).join('');
+        grid.style.display = '';
+    }
+
+    async function fetchNews() {
+        try {
+            const res = await fetch('./data/news.json');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            document.getElementById('newsLoading').style.display = 'none';
+            renderNews(data.items || []);
+            if (data.updated_at) {
+                const upd = document.getElementById('newsUpdated');
+                upd.textContent = `Mis à jour : ${new Date(data.updated_at).toLocaleString('fr-FR')}`;
+                upd.style.display = '';
+            }
+            newsLoaded = true;
+        } catch (e) {
+            document.getElementById('newsLoading').textContent = 'Impossible de charger les actualités.';
+        }
+    }
+
     function switchTab(tab, pushHash) {
         tabJeux.classList.remove('active');
         tabMaj.classList.remove('active');
         tabInfo.classList.remove('active');
         tabTrad.classList.remove('active');
         tabStats.classList.remove('active');
+        tabNews.classList.remove('active');
         grid.style.display      = 'none';
         controlsEl.style.display= 'none';
         stats.style.display     = 'none';
@@ -2114,6 +2226,7 @@
         infoPanel.classList.remove('visible');
         tradPanel.classList.remove('visible');
         statsPanel.classList.remove('visible');
+        newsPanel.classList.remove('visible');
 
         if (tab === 'maj') {
             tabMaj.classList.add('active');
@@ -2131,6 +2244,10 @@
             tabStats.classList.add('active');
             statsPanel.classList.add('visible');
             renderStats();
+        } else if (tab === 'news') {
+            tabNews.classList.add('active');
+            newsPanel.classList.add('visible');
+            if (!newsLoaded) fetchNews();
         } else {
             tab = 'jeux';
             tabJeux.classList.add('active');
@@ -2150,6 +2267,7 @@
     tabInfo.addEventListener('click',  () => switchTab('info'));
     tabTrad.addEventListener('click',  () => switchTab('trad'));
     tabStats.addEventListener('click', () => switchTab('stats'));
+    tabNews.addEventListener ('click', () => switchTab('news'));
     majPanel.addEventListener('click', (e) => {
         const el = e.target.closest('.game-link');
         if (el) openGameModal(parseInt(el.dataset.idx), GAMES_DATA);
@@ -2271,7 +2389,7 @@
         }
 
         const hash = location.hash.replace('#', '');
-        if (['maj', 'info', 'trad', 'stats'].includes(hash)) switchTab(hash, false);
+        if (['maj', 'info', 'trad', 'stats', 'news'].includes(hash)) switchTab(hash, false);
     })();
     </script>
 
