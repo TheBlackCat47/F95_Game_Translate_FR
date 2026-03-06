@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Dernière mise à jour : 06/03/2026 08:15:38 -->
+<!-- Dernière mise à jour : 06/03/2026 08:30:24 -->
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -612,6 +612,52 @@
                       transition:border-color 0.2s, color 0.2s; }
         #viewToggle:hover { border-color:#e94560; color:#e94560; }
 
+        /* ── Highlight ── */
+        mark { background:#6ea8fe33; color:#93c5fd; border-radius:2px; padding:0 1px; }
+
+        /* ── Active tags bar ── */
+        #active-tags-bar { padding:0 24px; display:flex; flex-wrap:wrap; gap:6px;
+                           align-items:center; min-height:0; }
+        #active-tags-bar:empty { padding:0; }
+        .active-tag { display:inline-flex; align-items:center; gap:4px; background:#1e3a5f66;
+                      border:1px solid #6ea8fe66; color:#93c5fd; border-radius:4px;
+                      padding:3px 8px; font-size:.75rem; margin:4px 0; }
+        .active-tag-remove { cursor:pointer; opacity:.7; font-size:.9rem; line-height:1; border:none;
+                             background:none; color:inherit; padding:0; }
+        .active-tag-remove:hover { opacity:1; }
+        .tag-chip-active { background:#1e3a5f88 !important; border-color:#6ea8fe99 !important; }
+
+        /* ── Copy link button ── */
+        #copyLinkBtn { background:none; border:1px solid #444; color:#aaa; padding:6px 10px;
+                       border-radius:6px; cursor:pointer; font-size:0.85rem;
+                       transition:border-color .2s, color .2s; }
+        #copyLinkBtn:hover { border-color:#6ea8fe; color:#6ea8fe; }
+
+        /* ── Badge décalé ── */
+        .badge-decale { background:#7c3a0022; color:#fdba74; border:1px solid #92400e44; font-size:.68rem; }
+
+        /* ── Stats panel ── */
+        .stats-panel { display:none; padding:24px; max-width:900px; margin:0 auto; }
+        .stats-panel.visible { display:block; }
+        .stat-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin-bottom:32px; }
+        .stat-card { background:#1a1a2e; border:1px solid #222; border-radius:10px; padding:16px; text-align:center; }
+        .stat-card-value { font-size:2rem; font-weight:700; color:#e94560; }
+        .stat-card-label { font-size:.78rem; color:#888; margin-top:4px; }
+        .stat-section { margin-bottom:32px; }
+        .stat-section-title { font-size:1rem; font-weight:600; color:#ccc; margin-bottom:14px;
+                              border-bottom:1px solid #222; padding-bottom:6px; }
+        .stat-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:7px; font-size:.82rem; }
+        .stat-bar-label { width:160px; color:#bbb; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; }
+        .stat-bar-wrap { flex:1; background:#1a1a2e; border-radius:4px; height:10px; overflow:hidden; border:1px solid #222; }
+        .stat-bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#6ea8fe,#a78bfa); }
+        .stat-bar-count { width:36px; text-align:right; color:#666; font-size:.78rem; flex-shrink:0; }
+        .stat-month-wrap { display:flex; align-items:flex-end; gap:3px; height:100px; margin-bottom:6px; }
+        .stat-month-col { flex:1; display:flex; flex-direction:column; align-items:center; min-width:0; }
+        .stat-month-bar { width:100%; background:#6ea8fe33; border-radius:3px 3px 0 0; transition:background .15s; }
+        .stat-month-bar:hover { background:#6ea8fe66; }
+        .stat-month-label { font-size:.6rem; color:#555; margin-top:4px; white-space:nowrap; overflow:hidden;
+                            text-overflow:ellipsis; width:100%; text-align:center; }
+
     </style>
 </head>
 <body>
@@ -628,6 +674,7 @@
             <button class="nav-tab active" id="tabJeux">Jeux</button>
             <button class="nav-tab" id="tabMaj">Mises &agrave; jour</button>
             <button class="nav-tab" id="tabInfo">Informations</button>
+            <button class="nav-tab" id="tabStats">Statistiques</button>
         </div>
         <div class="controls" id="controls">
             <input type="text" id="search" placeholder="Rechercher un jeu, tag, traducteur...">
@@ -648,13 +695,16 @@
                 <option value="nom">Tri: Nom A-Z</option>
                 <option value="nom_desc">Tri: Nom Z-A</option>
                 <option value="statut">Tri: Statut</option>
+                <option value="recent">Tri: R&eacute;cemment mis &agrave; jour</option>
             </select>
             <button id="viewToggle" title="Vue liste/grille">⊞</button>
             <button class="reset-btn" id="resetBtn" title="R&eacute;initialiser tous les filtres">R&eacute;initialiser</button>
+            <button id="copyLinkBtn" title="Copier le lien avec les filtres">🔗</button>
         </div>
         <div class="stats" id="stats"></div>
     </header>
 
+    <div id="active-tags-bar"></div>
     <div class="grid" id="grid">
         <div id="loading" class="skeleton-grid" aria-hidden="true"></div>
         <div id="error"></div>
@@ -671,6 +721,10 @@
     <div class="info-panel" id="infoPanel">
         <div class="info-loading" id="infoLoading">Chargement des informations...</div>
         <div id="infoContent"></div>
+    </div>
+
+    <div class="stats-panel" id="statsPanel">
+        <div id="statsContent"></div>
     </div>
 
     <button class="back-to-top" id="backToTop" title="Retour en haut">&uarr;</button>
@@ -777,6 +831,8 @@
     let GAMES_DATA = [];
     let MAJ_ENTRIES = [];
     let RECENT_GAMES_SET = new Set();
+    let ACTIVE_TAGS    = new Set();
+    let lastMajDateMap = new Map();
     let modalNavList = [];
     let modalNavIdx = 0;
     let listMode = false;
@@ -818,6 +874,147 @@
                 if (t) RECENT_GAMES_SET.add(t);
             });
         }
+    }
+
+    // ── URL sharing ──────────────────────────────────────────────────────────
+    function updateURL() {
+        const p = new URLSearchParams();
+        if (searchInput.value)       p.set('q',        searchInput.value);
+        if (filterStatut.value)      p.set('statut',   filterStatut.value);
+        if (filterType.value)        p.set('type',     filterType.value);
+        if (filterTradType.value)    p.set('tradtype', filterTradType.value);
+        if (filterTranslator.value)  p.set('trad',     filterTranslator.value);
+        if (sortBy.value !== 'nom')  p.set('sort',     sortBy.value);
+        if (ACTIVE_TAGS.size)        p.set('tags',     [...ACTIVE_TAGS].join(','));
+        const str = p.toString();
+        history.replaceState(null, '', (str ? '?' + str : location.pathname) + location.hash);
+    }
+
+    function readURLParams() {
+        const p = new URLSearchParams(location.search);
+        if (p.has('q'))        searchInput.value        = p.get('q');
+        if (p.has('statut'))   filterStatut.value       = p.get('statut');
+        if (p.has('type'))     filterType.value          = p.get('type');
+        if (p.has('tradtype')) filterTradType.value      = p.get('tradtype');
+        if (p.has('trad'))     filterTranslator.value    = p.get('trad');
+        if (p.has('sort'))     sortBy.value              = p.get('sort');
+        if (p.has('tags'))     p.get('tags').split(',').filter(Boolean).forEach(t => ACTIVE_TAGS.add(t.trim()));
+    }
+
+    // ── Highlight ─────────────────────────────────────────────────────────────
+    function highlight(text, query) {
+        if (!query) return escapeHtml(text);
+        const escaped = escapeHtml(text);
+        const safeQ = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return escaped.replace(new RegExp(safeQ, 'gi'), m => `<mark>${m}</mark>`);
+    }
+
+    // ── Tri par date de MAJ ───────────────────────────────────────────────────
+    function buildLastMajDateMap(entries) {
+        lastMajDateMap = new Map();
+        for (const e of entries) {
+            if (!e.date) continue;
+            const parts = e.date.split('/');
+            if (parts.length !== 3) continue;
+            const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+            e.games.split(',').forEach(g => {
+                const key = g.trim().toLowerCase();
+                if (!key) return;
+                if (!lastMajDateMap.has(key) || d > lastMajDateMap.get(key))
+                    lastMajDateMap.set(key, d);
+            });
+        }
+    }
+
+    // ── Active tags bar ───────────────────────────────────────────────────────
+    function renderActiveTags() {
+        const bar = document.getElementById('active-tags-bar');
+        bar.innerHTML = '';
+        ACTIVE_TAGS.forEach(tag => {
+            const chip = document.createElement('span');
+            chip.className = 'active-tag';
+            chip.innerHTML = `${escapeHtml(tag)}<button class="active-tag-remove" data-tag="${escapeHtml(tag)}" aria-label="Retirer ${escapeHtml(tag)}">×</button>`;
+            bar.appendChild(chip);
+        });
+    }
+
+    function toggleTag(tag) {
+        if (ACTIVE_TAGS.has(tag)) ACTIVE_TAGS.delete(tag);
+        else ACTIVE_TAGS.add(tag);
+        renderActiveTags();
+        render();
+    }
+
+    // ── Statistiques ──────────────────────────────────────────────────────────
+    function renderStats() {
+        const contentEl = document.getElementById('statsContent');
+        if (!contentEl) return;
+
+        const total     = GAMES_DATA.length;
+        const enCours   = GAMES_DATA.filter(g => g.statut === 'EN COURS').length;
+        const termines  = GAMES_DATA.filter(g => g.statut === 'TERMINÉ').length;
+        const abandonnes= GAMES_DATA.filter(g => g.statut === 'ABANDONNÉ').length;
+
+        function countMap(arr) {
+            return arr.reduce((m, k) => { if (k) m.set(k, (m.get(k)||0)+1); return m; }, new Map());
+        }
+
+        const topMoteurs = [...countMap(GAMES_DATA.map(g => g.type_moteur)).entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+        const topTrads   = [...countMap(GAMES_DATA.map(g => g.traducteur)).entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+        const now = new Date();
+        const months = [];
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            months.push({ year: d.getFullYear(), month: d.getMonth(), count: 0,
+                          label: d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }) });
+        }
+        for (const e of MAJ_ENTRIES) {
+            if (!e.date) continue;
+            const parts = e.date.split('/');
+            if (parts.length !== 3) continue;
+            const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+            const idx = months.findIndex(m => m.year === d.getFullYear() && m.month === d.getMonth());
+            if (idx !== -1) months[idx].count++;
+        }
+        const maxMonth = Math.max(...months.map(m => m.count), 1);
+
+        function barRows(entries) {
+            if (!entries.length) return '<div style="color:#666;font-size:.82rem">Aucune donnée</div>';
+            const max = entries[0][1];
+            return entries.map(([label, count]) => `
+                <div class="stat-bar-row">
+                    <div class="stat-bar-label" title="${escapeHtml(label)}">${escapeHtml(label)}</div>
+                    <div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:${Math.round(count/max*100)}%"></div></div>
+                    <div class="stat-bar-count">${count}</div>
+                </div>`).join('');
+        }
+
+        contentEl.innerHTML = `
+            <div class="stat-cards">
+                <div class="stat-card"><div class="stat-card-value">${total}</div><div class="stat-card-label">Jeux total</div></div>
+                <div class="stat-card"><div class="stat-card-value">${enCours}</div><div class="stat-card-label">En cours</div></div>
+                <div class="stat-card"><div class="stat-card-value">${termines}</div><div class="stat-card-label">Terminés</div></div>
+                <div class="stat-card"><div class="stat-card-value">${abandonnes}</div><div class="stat-card-label">Abandonnés</div></div>
+            </div>
+            <div class="stat-section">
+                <div class="stat-section-title">Top moteurs</div>
+                ${barRows(topMoteurs)}
+            </div>
+            <div class="stat-section">
+                <div class="stat-section-title">Top traducteurs</div>
+                ${barRows(topTrads)}
+            </div>
+            <div class="stat-section">
+                <div class="stat-section-title">Activité mensuelle (12 derniers mois)</div>
+                <div class="stat-month-wrap">
+                    ${months.map(m => `
+                        <div class="stat-month-col">
+                            <div class="stat-month-bar" style="height:${Math.round(m.count/maxMonth*100)}%" title="${m.count} MAJ"></div>
+                            <div class="stat-month-label">${m.label}</div>
+                        </div>`).join('')}
+                </div>
+            </div>`;
     }
 
     // ── Dernière mise à jour (via meta.json) ─────────────────────────────────
@@ -1029,6 +1226,7 @@
     function renderCard(game, navIdx) {
         const clone = cardTpl.content.cloneNode(true);
         const card  = clone.querySelector('.card');
+        const query = searchInput.value.toLowerCase().trim();
 
         const imgWrap = card.querySelector('.card-img-wrap');
         if (game.image_url) {
@@ -1042,10 +1240,10 @@
         if (game.game_url) {
             const a = document.createElement('a');
             a.href = game.game_url; a.target = '_blank'; a.rel = 'noopener';
-            a.textContent = game.nom;
+            a.innerHTML = highlight(game.nom, query);
             titleEl.appendChild(a);
         } else {
-            titleEl.textContent = game.nom;
+            titleEl.innerHTML = highlight(game.nom, query);
         }
 
         const statutBadge = card.querySelector('.badge-statut');
@@ -1068,6 +1266,15 @@
             card.querySelector('.card-meta').appendChild(newBadge);
         }
 
+        // Badge ⚠ Retard
+        if (game.statut !== 'ABANDONNÉ' && game.version && game.trad_version && game.version !== game.trad_version) {
+            const b = document.createElement('span');
+            b.className = 'badge badge-decale';
+            b.title = `Jeu : ${game.version} | Trad : ${game.trad_version}`;
+            b.textContent = '⚠ Retard';
+            card.querySelector('.card-meta').appendChild(b);
+        }
+
         const infoEl = card.querySelector('.card-info');
         let infoHtml = `Version: <span>${escapeHtml(game.version)}</span> | Trad: <span>${escapeHtml(game.trad_version)}</span>`;
         if (game.traducteur) {
@@ -1083,7 +1290,10 @@
         const tagsEl = card.querySelector('.card-tags');
         if (game.tags) {
             tagsEl.innerHTML = game.tags.split(',').map(t => t.trim()).filter(Boolean)
-                .map(t => `<span class="tag-chip" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</span>`).join('');
+                .map(t => {
+                    const isActive = ACTIVE_TAGS.has(t);
+                    return `<span class="tag-chip${isActive ? ' tag-chip-active' : ''}" data-tag="${escapeHtml(t)}">${highlight(t, query)}</span>`;
+                }).join('');
         } else { tagsEl.remove(); }
 
         const linksEl = card.querySelector('.card-links');
@@ -1173,6 +1383,7 @@
             if (sType     && g.type_moteur  !== sType)     return false;
             if (sTradType && g.type_trad    !== sTradType) return false;
             if (sTrad     && g.traducteur   !== sTrad)     return false;
+            if (ACTIVE_TAGS.size && ![...ACTIVE_TAGS].every(t => g._tagsL.includes(t.toLowerCase()))) return false;
             return true;
         });
 
@@ -1180,8 +1391,11 @@
             if (sort === 'nom')      return (a.nom || '').localeCompare(b.nom || '', 'fr');
             if (sort === 'nom_desc') return (b.nom || '').localeCompare(a.nom || '', 'fr');
             if (sort === 'statut')   return (a.statut || '').localeCompare(b.statut || '', 'fr') || (a.nom || '').localeCompare(b.nom || '', 'fr');
+            if (sort === 'recent')   return (lastMajDateMap.get(b._nameL) || new Date(0)) - (lastMajDateMap.get(a._nameL) || new Date(0));
             return 0;
         });
+
+        renderActiveTags();
 
         saveFiltersState();
         updateResetBtn();
@@ -1206,10 +1420,13 @@
                 translator: filterTranslator.value, sort: sortBy.value
             }));
         } catch (e) {}
+        updateURL();
     }
 
     function restoreFiltersState() {
+        readURLParams(); // URL params have priority
         try {
+            if (location.search) return; // URL params present → skip sessionStorage
             const raw = sessionStorage.getItem('gx_filters');
             if (!raw) return;
             const f = JSON.parse(raw);
@@ -1224,7 +1441,8 @@
 
     function hasActiveFilters() {
         return searchInput.value || filterStatut.value || filterType.value ||
-               filterTradType.value || filterTranslator.value || sortBy.value !== 'nom';
+               filterTradType.value || filterTranslator.value || sortBy.value !== 'nom' ||
+               ACTIVE_TAGS.size > 0;
     }
 
     function updateResetBtn() {
@@ -1234,6 +1452,7 @@
     function resetFilters() {
         searchInput.value = ''; filterStatut.value = ''; filterType.value = '';
         filterTradType.value = ''; filterTranslator.value = ''; sortBy.value = 'nom';
+        ACTIVE_TAGS.clear(); renderActiveTags();
         render();
     }
 
@@ -1250,6 +1469,7 @@
                 if (data && Array.isArray(data.entries) && data.entries.length > 0) {
                     renderMaj(data.entries);
                     buildRecentGamesSet(data.entries);
+                    buildLastMajDateMap(data.entries);
                     if (Date.now() - data.ts > CACHE_TTL) loadMajFromAPI();
                     return;
                 }
@@ -1276,6 +1496,7 @@
             } catch (e) {}
             renderMaj(entries);
             buildRecentGamesSet(entries);
+            buildLastMajDateMap(entries);
         } catch (err) {
             majLoading.textContent = 'Erreur de chargement des mises à jour.';
         }
@@ -1599,6 +1820,8 @@
         let metaHtml = `<span class="badge ${statutBadgeClass(game.statut)}">${escapeHtml(game.statut||'')}</span>`;
         if (game.type_moteur) metaHtml += `<span class="badge badge-type">${escapeHtml(game.type_moteur)}</span>`;
         if (game.type_trad)   metaHtml += `<span class="badge badge-trad-type">${escapeHtml(game.type_trad)}</span>`;
+        if (game.statut !== 'ABANDONNÉ' && game.version && game.trad_version && game.version !== game.trad_version)
+            metaHtml += `<span class="badge badge-decale" title="Jeu : ${escapeHtml(game.version)} | Trad : ${escapeHtml(game.trad_version)}">⚠ Retard</span>`;
         metaEl.innerHTML = metaHtml;
 
         let infoHtml = `Version: <span>${escapeHtml(game.version||'—')}</span> | Trad: <span>${escapeHtml(game.trad_version||'—')}</span>`;
@@ -1667,8 +1890,10 @@
     const tabJeux    = document.getElementById('tabJeux');
     const tabMaj     = document.getElementById('tabMaj');
     const tabInfo    = document.getElementById('tabInfo');
+    const tabStats   = document.getElementById('tabStats');
     const majPanel   = document.getElementById('majPanel');
     const infoPanel  = document.getElementById('infoPanel');
+    const statsPanel = document.getElementById('statsPanel');
     const infoLoading= document.getElementById('infoLoading');
     const infoContent= document.getElementById('infoContent');
     const majLoading = document.getElementById('majLoading');
@@ -1681,11 +1906,13 @@
         tabJeux.classList.remove('active');
         tabMaj.classList.remove('active');
         tabInfo.classList.remove('active');
+        tabStats.classList.remove('active');
         grid.style.display      = 'none';
         controlsEl.style.display= 'none';
         stats.style.display     = 'none';
         majPanel.classList.remove('visible');
         infoPanel.classList.remove('visible');
+        statsPanel.classList.remove('visible');
 
         if (tab === 'maj') {
             tabMaj.classList.add('active');
@@ -1695,6 +1922,10 @@
             tabInfo.classList.add('active');
             infoPanel.classList.add('visible');
             if (!infoLoaded) fetchInfo();
+        } else if (tab === 'stats') {
+            tabStats.classList.add('active');
+            statsPanel.classList.add('visible');
+            renderStats();
         } else {
             tab = 'jeux';
             tabJeux.classList.add('active');
@@ -1712,6 +1943,7 @@
     tabJeux.addEventListener('click', () => switchTab('jeux'));
     tabMaj.addEventListener ('click', () => switchTab('maj'));
     tabInfo.addEventListener('click', () => switchTab('info'));
+    tabStats.addEventListener('click', () => switchTab('stats'));
     majPanel.addEventListener('click', (e) => {
         const el = e.target.closest('.game-link');
         if (el) openGameModal(parseInt(el.dataset.idx), GAMES_DATA);
@@ -1749,10 +1981,27 @@
     sortBy.addEventListener('change',       render);
     resetBtn.addEventListener('click',      resetFilters);
 
-    // Tag chips event delegation
+    // Tag chips event delegation (multi-sélection)
     grid.addEventListener('click', e => {
         const chip = e.target.closest('.tag-chip');
-        if (chip) { searchInput.value = chip.dataset.tag; render(); }
+        if (chip) toggleTag(chip.dataset.tag);
+    });
+
+    // Active tags bar — retrait des tags
+    document.getElementById('active-tags-bar').addEventListener('click', e => {
+        const btn = e.target.closest('.active-tag-remove');
+        if (btn) toggleTag(btn.dataset.tag);
+    });
+
+    // Copy link button
+    document.getElementById('copyLinkBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(location.href).then(() => {
+            const btn = document.getElementById('copyLinkBtn');
+            const prev = btn.textContent;
+            btn.textContent = '✓';
+            btn.style.color = '#63d99a';
+            setTimeout(() => { btn.textContent = prev; btn.style.color = ''; }, 2000);
+        });
     });
 
     // View toggle
@@ -1789,7 +2038,10 @@
             const majRaw = localStorage.getItem(MAJ_CACHE_KEY);
             if (majRaw) {
                 const majData = JSON.parse(majRaw);
-                if (majData && Array.isArray(majData.entries)) buildRecentGamesSet(majData.entries);
+                if (majData && Array.isArray(majData.entries)) {
+                    buildRecentGamesSet(majData.entries);
+                    buildLastMajDateMap(majData.entries);
+                }
             }
         } catch(e) {}
         const cached = loadCache();
@@ -1806,7 +2058,7 @@
         }
 
         const hash = location.hash.replace('#', '');
-        if (hash === 'maj' || hash === 'info') switchTab(hash, false);
+        if (hash === 'maj' || hash === 'info' || hash === 'stats') switchTab(hash, false);
     })();
     </script>
 
