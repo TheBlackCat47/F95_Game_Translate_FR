@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Dernière mise à jour : 06/03/2026 01:35:06 -->
+<!-- Dernière mise à jour : 06/03/2026 01:43:05 -->
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -643,6 +643,24 @@
 
     let GAMES_DATA = [];
     let dataSource = 'cache';
+    let lastSyncLabel = '';
+
+    // ── Dernière mise à jour (via meta.json) ─────────────────────────────────
+
+    async function fetchLastSync() {
+        try {
+            const res = await fetch('./data/meta.json');
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data || !data.updated_at) return;
+            const d = new Date(data.updated_at);
+            lastSyncLabel = 'Dernière mise à jour : ' + d.toLocaleString('fr-FR', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+            if (GAMES_DATA.length) render();
+        } catch (e) {}
+    }
 
     // ── Chargement des jeux depuis le CSV statique ────────────────────────────
 
@@ -906,7 +924,7 @@
         grid.appendChild(fragment);
         displayedCount = end;
 
-        stats.textContent = `${displayedCount}/${currentFiltered.length} affiché${displayedCount > 1 ? 's' : ''} sur ${GAMES_DATA.length} | Source: ${dataSource}`;
+        stats.textContent = `${displayedCount}/${currentFiltered.length} affiché${displayedCount > 1 ? 's' : ''} sur ${GAMES_DATA.length}${lastSyncLabel ? ' | ' + lastSyncLabel : ''}`;
     }
 
     const sentinel = document.createElement('div');
@@ -1361,6 +1379,7 @@
     // ── Démarrage ─────────────────────────────────────────────────────────────
 
     (function init() {
+        fetchLastSync();
         const cached = loadCache();
         if (cached && cached.games.length > 0) {
             GAMES_DATA = cached.games;
