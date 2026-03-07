@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<!-- Dernière mise à jour : 07/03/2026 22:15:20 -->
+<!-- Dernière mise à jour : 07/03/2026 22:30:19 -->
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -1117,16 +1117,22 @@
     };
 
     const LINK_META = {
-        'discord:':             { icon: 'discord',   name: 'Discord',       color: '#5865F2', desc: 'Rejoindre la communauté' },
-        'thread f95:':          { icon: 'forum',     name: 'Thread F95',    color: '#e94560', desc: 'Forum de discussion' },
-        'extension f95 france:':{ icon: 'extension', name: 'Extension F95', color: '#fdba74', desc: 'Plugin navigateur' }
+        'discord:':             { icon: 'discord',   name: 'Discord F95',    color: '#5865F2', desc: 'Communauté F95Zone' },
+        'discord fr:':          { icon: 'discord',   name: 'Discord FR',     color: '#5865F2', desc: 'Communauté F95 France' },
+        'thread f95:':          { icon: 'forum',     name: 'Thread F95',     color: '#e94560', desc: 'Forum de discussion' },
+        'extension f95 france:':{ icon: 'extension', name: 'Extension F95',  color: '#fdba74', desc: 'Plugin navigateur' }
     };
 
     // Overrides d'URLs (prennent le dessus sur les valeurs du Google Sheet)
     const URL_OVERRIDES = {
         'discord:':    'https://discord.f95zone.to/',
-        'thread f95:': 'https://f95zone.to/threads/liste-des-jeux-et-traductions-fr-list-game-and-translats-french.71684/'
+        'thread f95:': 'https://f95zone.to/threads/26002'
     };
+
+    // Liens fixes injectés en complément du Google Sheet
+    const EXTRA_LINKS = [
+        { label: 'Discord FR:', url: 'https://discord.gg/QXd9kr3ewW' }
+    ];
 
     function renderInfo(lines) {
         infoLoaded = true;
@@ -1143,6 +1149,7 @@
                 i += 2;
             } else { i++; }
         }
+        for (const el of EXTRA_LINKS) links.push(el);
 
         const fragment = document.createDocumentFragment();
 
