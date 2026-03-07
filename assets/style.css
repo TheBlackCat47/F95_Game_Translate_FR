@@ -807,3 +807,26 @@
         .trad-game-link:hover { color:#93c5fd; }
         .trad-game-statut { font-size:.7rem; color:#555; white-space:nowrap; margin-left:8px; flex-shrink:0; }
         .trad-modal-empty { font-size:.82rem; color:#555; padding:8px 0; font-style:italic; }
+
+        /* ── Month chart ── */
+        .stat-month-wrap { display:flex; align-items:flex-end; gap:3px; border-bottom:1px solid #1e2736; padding-bottom:4px; margin-top:8px; }
+        .stat-month-col  { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; }
+        .stat-month-bars { display:flex; align-items:flex-end; gap:1px; height:80px; width:100%; }
+        .stat-month-bar  { flex:1; border-radius:2px 2px 0 0; min-height:2px; transition:height .3s ease; }
+        .stat-month-bar-maj   { background:linear-gradient(to top,#6ea8fe,#a78bfa); }
+        .stat-month-bar-ajout { background:#63d99a; }
+        .stat-month-label { font-size:.55rem; color:#555; margin-top:3px; text-align:center; white-space:nowrap; }
+        .stat-month-legend { display:flex; align-items:center; gap:8px; font-size:.75rem; color:#888; margin-bottom:6px; }
+        .stat-month-legend-dot { width:10px; height:10px; border-radius:2px; display:inline-block; flex-shrink:0; }
+
+        /* ── Stats extras ── */
+        .stat-bar-clickable { cursor:pointer; }
+        .stat-bar-clickable:hover .stat-bar-fill  { filter:brightness(1.25); }
+        .stat-bar-clickable:hover .stat-bar-label { color:#e94560; }
+        .stat-bar-pct { color:#555; font-size:.72rem; margin-left:4px; }
+        .stat-section-hint { font-size:.72rem; color:#555; font-weight:400; }
+        .stat-period-sel { background:#1e2736; border:1px solid #334155; color:#e2e8f0; border-radius:6px; padding:3px 8px; font-size:.78rem; cursor:pointer; }
+        .stat-tags-wrap { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
+        .stat-tag-chip { display:inline-flex; align-items:center; gap:6px; background:#1e3a5f33; border:1px solid #6ea8fe44; color:#93c5fd; border-radius:4px; padding:3px 10px; font-size:.78rem; cursor:pointer; transition:background .15s; }
+        .stat-tag-chip:hover { background:#1e3a5f88; }
+        .stat-tag-count { color:#6ea8fe; font-weight:700; font-size:.72rem; }

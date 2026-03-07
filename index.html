@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<!-- Dernière mise à jour : 07/03/2026 22:00:27 -->
+<!-- Dernière mise à jour : 07/03/2026 22:07:54 -->
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -327,28 +327,38 @@
     }
 
     // ── Statistiques ──────────────────────────────────────────────────────────
+    let statsPeriod = 12;
+
     function renderStats() {
         const contentEl = document.getElementById('statsContent');
         if (!contentEl) return;
 
-        const total     = GAMES_DATA.length;
-        const enCours   = GAMES_DATA.filter(g => g.statut === 'EN COURS').length;
-        const termines  = GAMES_DATA.filter(g => g.statut === 'TERMINÉ').length;
-        const abandonnes= GAMES_DATA.filter(g => g.statut === 'ABANDONNÉ').length;
+        const total      = GAMES_DATA.length;
+        const enCours    = GAMES_DATA.filter(g => g.statut === 'EN COURS').length;
+        const termines   = GAMES_DATA.filter(g => g.statut === 'TERMINÉ').length;
+        const abandonnes = GAMES_DATA.filter(g => g.statut === 'ABANDONNÉ').length;
+        const pctCompl   = total ? Math.round(termines / total * 100) : 0;
 
         function countMap(arr) {
             return arr.reduce((m, k) => { if (k) m.set(k, (m.get(k)||0)+1); return m; }, new Map());
         }
 
-        const topMoteurs = [...countMap(GAMES_DATA.map(g => g.type_moteur)).entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
-        const topTrads   = [...countMap(GAMES_DATA.map(g => g.traducteur)).entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+        const topMoteurs    = [...countMap(GAMES_DATA.map(g => g.type_moteur)).entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+        const topTrads      = [...countMap(GAMES_DATA.map(g => g.traducteur)).entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+        const topTradTypes  = [...countMap(GAMES_DATA.map(g => g.type_trad)).entries()].sort((a,b)=>b[1]-a[1]);
+        const statutEntries = [...countMap(GAMES_DATA.map(g => g.statut)).entries()].sort((a,b)=>b[1]-a[1]);
+
+        const allTags = GAMES_DATA.flatMap(g => g.tags ? g.tags.split(',').map(t => t.trim()).filter(Boolean) : []);
+        const topTags = [...countMap(allTags).entries()].sort((a,b)=>b[1]-a[1]).slice(0,15);
 
         const now = new Date();
         const months = [];
-        for (let i = 11; i >= 0; i--) {
+        for (let i = statsPeriod - 1; i >= 0; i--) {
             const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            months.push({ year: d.getFullYear(), month: d.getMonth(), count: 0,
-                          label: d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }) });
+            months.push({
+                year: d.getFullYear(), month: d.getMonth(), maj: 0, ajout: 0,
+                label: d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
+            });
         }
         for (const e of MAJ_ENTRIES) {
             if (!e.date) continue;
@@ -356,19 +366,37 @@
             if (parts.length !== 3) continue;
             const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
             const idx = months.findIndex(m => m.year === d.getFullYear() && m.month === d.getMonth());
-            if (idx !== -1) months[idx].count++;
+            if (idx !== -1) {
+                months[idx].maj++;
+                if (majTypeClass(e.type) === 'maj-type-ajout') months[idx].ajout++;
+            }
         }
-        const maxMonth = Math.max(...months.map(m => m.count), 1);
+        const maxMonth = Math.max(...months.map(m => m.maj), 1);
 
-        function barRows(entries) {
+        function statutColor(statut) {
+            const s = (statut || '').toUpperCase();
+            if (s.includes('COURS'))   return '#6ea8fe';
+            if (s.includes('TERMIN'))  return '#63d99a';
+            if (s.includes('ABANDON')) return '#f08090';
+            return '#888';
+        }
+
+        function barRows(entries, opts) {
+            const { filterAttr, showPct, colorFn } = opts || {};
             if (!entries.length) return '<div style="color:#666;font-size:.82rem">Aucune donnée</div>';
             const max = entries[0][1];
-            return entries.map(([label, count]) => `
-                <div class="stat-bar-row">
+            return entries.map(([label, count]) => {
+                const pctStr    = showPct ? `<span class="stat-bar-pct">${Math.round(count / total * 100)}%</span>` : '';
+                const fillStyle = colorFn ? `background:${colorFn(label)}` : '';
+                const dataAttr  = filterAttr ? `data-filter="${filterAttr}" data-value="${escapeHtml(label)}"` : '';
+                const cls       = filterAttr ? 'stat-bar-row stat-bar-clickable' : 'stat-bar-row';
+                return `
+                <div class="${cls}" ${dataAttr}>
                     <div class="stat-bar-label" title="${escapeHtml(label)}">${escapeHtml(label)}</div>
-                    <div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:${Math.round(count/max*100)}%"></div></div>
-                    <div class="stat-bar-count">${count}</div>
-                </div>`).join('');
+                    <div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:${Math.round(count/max*100)}%;${fillStyle}"></div></div>
+                    <div class="stat-bar-count">${count}${pctStr}</div>
+                </div>`;
+            }).join('');
         }
 
         contentEl.innerHTML = `
@@ -377,25 +405,87 @@
                 <div class="stat-card"><div class="stat-card-value">${enCours}</div><div class="stat-card-label">En cours</div></div>
                 <div class="stat-card"><div class="stat-card-value">${termines}</div><div class="stat-card-label">Terminés</div></div>
                 <div class="stat-card"><div class="stat-card-value">${abandonnes}</div><div class="stat-card-label">Abandonnés</div></div>
+                <div class="stat-card"><div class="stat-card-value">${pctCompl}%</div><div class="stat-card-label">Complétion</div></div>
             </div>
             <div class="stat-section">
-                <div class="stat-section-title">Top moteurs</div>
-                ${barRows(topMoteurs)}
+                <div class="stat-section-title">Répartition par statut</div>
+                ${barRows(statutEntries, { showPct: true, colorFn: statutColor })}
             </div>
             <div class="stat-section">
-                <div class="stat-section-title">Top traducteurs</div>
-                ${barRows(topTrads)}
+                <div class="stat-section-title">Répartition par type de traduction</div>
+                ${barRows(topTradTypes, { showPct: true })}
             </div>
             <div class="stat-section">
-                <div class="stat-section-title">Activité mensuelle (12 derniers mois)</div>
+                <div class="stat-section-title">Top moteurs <span class="stat-section-hint">— cliquer pour filtrer</span></div>
+                ${barRows(topMoteurs, { filterAttr: 'moteur', showPct: true })}
+            </div>
+            <div class="stat-section">
+                <div class="stat-section-title">Top traducteurs <span class="stat-section-hint">— cliquer pour filtrer</span></div>
+                ${barRows(topTrads, { filterAttr: 'trad', showPct: true })}
+            </div>
+            <div class="stat-section">
+                <div class="stat-section-title">Top tags</div>
+                <div class="stat-tags-wrap">
+                    ${topTags.map(([tag, count]) => `<span class="stat-tag-chip" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}<span class="stat-tag-count">${count}</span></span>`).join('')}
+                </div>
+            </div>
+            <div class="stat-section">
+                <div class="stat-section-title" style="justify-content:space-between;align-items:center">
+                    <span>Activité mensuelle</span>
+                    <select id="statsPeriodSel" class="stat-period-sel">
+                        <option value="1">1 mois</option>
+                        <option value="3">3 mois</option>
+                        <option value="6">6 mois</option>
+                        <option value="12">12 mois</option>
+                        <option value="24">24 mois</option>
+                    </select>
+                </div>
+                <div class="stat-month-legend">
+                    <span class="stat-month-legend-dot" style="background:linear-gradient(to right,#6ea8fe,#a78bfa)"></span> MAJ totales
+                    &nbsp;<span class="stat-month-legend-dot" style="background:#63d99a"></span> dont Ajouts
+                </div>
                 <div class="stat-month-wrap">
                     ${months.map(m => `
                         <div class="stat-month-col">
-                            <div class="stat-month-bar" style="height:${Math.round(m.count/maxMonth*100)}%" title="${m.count} MAJ"></div>
+                            <div class="stat-month-bars">
+                                <div class="stat-month-bar stat-month-bar-maj"   style="height:${Math.round(m.maj/maxMonth*100)}%"   title="${m.maj} MAJ"></div>
+                                <div class="stat-month-bar stat-month-bar-ajout" style="height:${Math.round(m.ajout/maxMonth*100)}%" title="${m.ajout} ajout${m.ajout !== 1 ? 's' : ''}"></div>
+                            </div>
                             <div class="stat-month-label">${m.label}</div>
                         </div>`).join('')}
                 </div>
             </div>`;
+
+        // ── Sélecteur de période ───────────────────────────────────────────────
+        const sel = document.getElementById('statsPeriodSel');
+        if (sel) {
+            sel.value = String(statsPeriod);
+            sel.addEventListener('change', () => { statsPeriod = parseInt(sel.value); renderStats(); });
+        }
+
+        // ── Barres cliquables (moteur + traducteur) ────────────────────────────
+        contentEl.querySelectorAll('[data-filter="moteur"]').forEach(el => {
+            el.addEventListener('click', () => {
+                filterType.value = el.dataset.value;
+                switchTab('jeux');
+                render();
+            });
+        });
+        contentEl.querySelectorAll('[data-filter="trad"]').forEach(el => {
+            el.addEventListener('click', () => {
+                filterTranslator.value = el.dataset.value;
+                switchTab('jeux');
+                render();
+            });
+        });
+
+        // ── Tags cliquables ────────────────────────────────────────────────────
+        contentEl.querySelectorAll('[data-tag]').forEach(el => {
+            el.addEventListener('click', () => {
+                toggleTag(el.dataset.tag);
+                switchTab('jeux');
+            });
+        });
     }
 
     // ── Dernière mise à jour (via meta.json) ─────────────────────────────────
