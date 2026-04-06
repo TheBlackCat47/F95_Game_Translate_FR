@@ -1,0 +1,1782 @@
+﻿<!DOCTYPE html>
+<!-- Dernière mise à jour : 06/04/2026 02:31:22 -->
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Translate FR</title>
+    <link rel="icon" type="image/png" href="./assets/logo/gtf95.png">
+    <link rel="apple-touch-icon" href="./assets/logo/gtf95.png">
+    <link rel="stylesheet" href="./assets/style.css">
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="aa7556a1-8dd7-4d62-ae7b-3b3be469d039"></script>
+</head>
+<body>
+    <div id="pgbar"></div>
+    <header>
+        <div class="header-top">
+            <div class="header-brand">
+                <img src="./assets/logo/gtf95.png" alt="Game Translate FR">
+                <h1>Game Translate FR</h1>
+            </div>
+            <button class="toggle-controls" id="toggleControls" title="Afficher/masquer les filtres">Filtres</button>
+        </div>
+        <div class="nav-tabs">
+            <button class="nav-tab active" id="tabJeux">Jeux</button>
+            <button class="nav-tab" id="tabMaj">Mises &agrave; jour</button>
+            <button class="nav-tab" id="tabInfo">Informations</button>
+            <button class="nav-tab" id="tabNews">F95 — News</button>
+            <button class="nav-tab" id="tabTrad">Traducteurs / Relecteurs</button>
+            <button class="nav-tab" id="tabStats">Statistiques</button>
+        </div>
+        <div class="controls" id="controls">
+            <input type="text" id="search" placeholder="Rechercher un jeu, tag, traducteur...">
+            <select id="filterStatut">
+                <option value="">Tous les statuts</option>
+                <option value="EN COURS">En Cours</option>
+                <option value="TERMINÉ">Termin&eacute;</option>
+                <option value="ABANDONNÉ">Abandonn&eacute;</option>
+            </select>
+            <select id="filterType">
+                <option value="">Tous les moteurs</option>
+            </select>
+            <select id="filterTradType">
+                <option value="">Toutes traductions</option>
+            </select>
+            <select id="filterTranslator"><option value="">Tous les traducteurs</option></select>
+            <select id="sortBy">
+                <option value="nom">Tri: Nom A-Z</option>
+                <option value="nom_desc">Tri: Nom Z-A</option>
+                <option value="statut">Tri: Statut</option>
+                <option value="recent">Tri: R&eacute;cemment mis &agrave; jour</option>
+            </select>
+            <button id="viewToggle" title="Vue liste/grille">⊞</button>
+            <button class="reset-btn" id="resetBtn" title="R&eacute;initialiser tous les filtres">R&eacute;initialiser</button>
+            <button id="copyLinkBtn" title="Copier le lien avec les filtres">🔗</button>
+        </div>
+        <div class="stats" id="stats"></div>
+    </header>
+
+    <div id="active-tags-bar"></div>
+    <div class="grid" id="grid">
+        <div id="loading" class="skeleton-grid" aria-hidden="true"></div>
+        <div id="error"></div>
+    </div>
+
+    <div class="maj-panel" id="majPanel">
+        <div class="maj-search-bar">
+            <input type="text" id="majSearch" placeholder="Filtrer les mises à jour...">
+        </div>
+        <div class="maj-loading" id="majLoading">Chargement des mises &agrave; jour...</div>
+        <div id="majContent"></div>
+    </div>
+
+    <div class="info-panel" id="infoPanel">
+        <div class="info-loading" id="infoLoading">Chargement des informations...</div>
+        <div id="infoContent"></div>
+    </div>
+
+    <div class="trad-panel" id="tradPanel">
+        <div class="trad-search-bar-wrap">
+            <input type="text" id="tradSearch" placeholder="Rechercher un contributeur...">
+        </div>
+        <div class="trad-loading" id="tradLoading">Chargement des contributeurs...</div>
+        <div class="trad-grid" id="tradGrid"></div>
+    </div>
+
+    <div class="stats-panel" id="statsPanel">
+        <div id="statsContent"></div>
+    </div>
+
+    <div class="news-panel" id="newsPanel">
+        <div id="newsLoading" style="text-align:center;padding:40px;color:#64748b">Chargement des actualités F95Zone…</div>
+        <div class="news-grid" id="newsGrid" style="display:none"></div>
+        <div class="news-updated" id="newsUpdated" style="display:none"></div>
+    </div>
+
+    <button class="back-to-top" id="backToTop" title="Retour en haut">&uarr;</button>
+
+    <template id="card-tpl">
+        <div class="card">
+            <div class="card-img-wrap"></div>
+            <div class="card-body">
+                <div class="card-title"></div>
+                <div class="card-meta">
+                    <span class="badge badge-statut"></span>
+                    <span class="badge badge-type"></span>
+                    <span class="badge badge-trad-type"></span>
+                </div>
+                <div class="card-info"></div>
+                <div class="card-tags"></div>
+                <div class="card-links"><a class="btn btn-game" target="_blank" rel="noopener">Page F95</a></div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Modal traducteur -->
+    <div class="modal-overlay" id="trad-modal" onclick="if(event.target===this)closeTradModal()">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeTradModal()">✕</button>
+            <div class="modal-body">
+                <div class="trad-modal-name" id="trad-modal-name"></div>
+                <div class="trad-modal-stats" id="trad-modal-stats"></div>
+                <div class="trad-modal-meta" id="trad-modal-meta"></div>
+                <div id="trad-modal-games"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal jeu -->
+    <div class="modal-overlay" id="game-modal" onclick="if(event.target===this)closeGameModal()">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeGameModal()">✕</button>
+            <button class="modal-nav modal-prev" id="modalPrev" title="Précédent">‹</button>
+            <button class="modal-nav modal-next" id="modalNext" title="Suivant">›</button>
+            <div class="modal-img" id="modal-img"></div>
+            <div class="modal-body">
+                <div class="modal-title" id="modal-title"></div>
+                <div class="modal-meta"  id="modal-meta"></div>
+                <div class="modal-info"  id="modal-info"></div>
+                <div class="modal-links" id="modal-links"></div>
+                <div class="modal-tags"  id="modal-tags"></div>
+                <div class="modal-history" id="modal-history">
+                    <div class="modal-history-title">Dernières mises à jour</div>
+                    <div class="modal-history-list" id="modal-history-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ── Parseur CSV (RFC 4180) ────────────────────────────────────────────────
+    function parseCSV(text) {
+        // Supprime le BOM éventuel
+        if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+        const rows = [];
+        let i = 0, n = text.length;
+        function readField() {
+            if (i < n && text[i] === '"') {
+                i++;
+                let f = '';
+                while (i < n) {
+                    if (text[i] === '"') {
+                        if (i + 1 < n && text[i + 1] === '"') { f += '"'; i += 2; }
+                        else { i++; break; }
+                    } else { f += text[i++]; }
+                }
+                return f;
+            }
+            let f = '';
+            while (i < n && text[i] !== ',' && text[i] !== '\n' && text[i] !== '\r') f += text[i++];
+            return f;
+        }
+        while (i < n) {
+            const row = [];
+            do { row.push(readField()); } while (i < n && text[i] === ',' && ++i);
+            if (i < n && text[i] === '\r') i++;
+            if (i < n && text[i] === '\n') i++;
+            rows.push(row);
+        }
+        if (rows.length === 0) return [];
+        const headers = rows[0];
+        return rows.slice(1)
+            .filter(r => r.some(f => f !== ''))
+            .map(r => Object.fromEntries(headers.map((h, idx) => [h, r[idx] ?? ''])));
+    }
+
+    // ── Config Google Sheets (onglet Informations uniquement) ─────────────────
+    const SHEET_ID = '1ELRF0kpF8SoUlslX5ZXZoG4WXeWST6lN9bLws32EPfs';
+
+    // ── Cache localStorage ────────────────────────────────────────────────────
+    const CACHE_KEY     = 'gx_games_cache';
+    const CACHE_TTL     = 5 * 60 * 1000; // 5 minutes
+
+    const searchInput   = document.getElementById('search');
+    const filterStatut  = document.getElementById('filterStatut');
+    const filterType    = document.getElementById('filterType');
+    const filterTradType= document.getElementById('filterTradType');
+    const sortBy        = document.getElementById('sortBy');
+    const grid          = document.getElementById('grid');
+    const stats         = document.getElementById('stats');
+    const loadingEl     = document.getElementById('loading');
+    const errorEl       = document.getElementById('error');
+    const resetBtn      = document.getElementById('resetBtn');
+    const cardTpl       = document.getElementById('card-tpl');
+    const backToTopBtn  = document.getElementById('backToTop');
+    const toggleControlsBtn = document.getElementById('toggleControls');
+    const filterTranslator = document.getElementById('filterTranslator');
+    const viewToggle       = document.getElementById('viewToggle');
+    const majSearchInput   = document.getElementById('majSearch');
+
+    let GAMES_DATA = [];
+    let MAJ_ENTRIES = [];
+    let TRAD_DATA = [];
+    let RECENT_GAMES_SET = new Set();
+    let ACTIVE_TAGS    = new Set();
+    let lastMajDateMap = new Map();
+    let modalNavList = [];
+    let modalNavIdx = 0;
+    let listMode = false;
+    let tradLoaded = false;
+    let dataSource = 'cache';
+    let lastSyncLabel = '';
+
+    // ── Progress bar ─────────────────────────────────────────────────────────
+    const pgbar = document.getElementById('pgbar');
+    function showProgress() { pgbar.style.opacity='1'; pgbar.style.width='40%'; }
+    function advanceProgress() { pgbar.style.width='75%'; }
+    function hideProgress() {
+        pgbar.style.width='100%';
+        setTimeout(() => { pgbar.style.opacity='0'; pgbar.style.width='0'; }, 400);
+    }
+
+    // ── Skeleton ──────────────────────────────────────────────────────────────
+    function showSkeleton() {
+        loadingEl.innerHTML = Array(8).fill(0).map(() =>
+            `<div class="sk-card"><div class="sk-img"></div>
+             <div class="sk-line"></div><div class="sk-line short"></div></div>`
+        ).join('');
+        loadingEl.style.display = 'contents';
+    }
+    function hideSkeleton() { loadingEl.style.display = 'none'; loadingEl.innerHTML = ''; }
+
+    // ── Badge NOUVEAU ─────────────────────────────────────────────────────────
+    function buildRecentGamesSet(entries) {
+        RECENT_GAMES_SET = new Set();
+        const cutoff = Date.now() - 7 * 86400000;
+        for (const e of entries) {
+            if (!e.date) continue;
+            // Parse FR date dd/mm/yyyy
+            const parts = e.date.split('/');
+            if (parts.length !== 3) continue;
+            const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+            if (isNaN(d.getTime()) || d.getTime() < cutoff) continue;
+            e.games.split(',').forEach(g => {
+                const t = g.trim().toLowerCase();
+                if (t) RECENT_GAMES_SET.add(t);
+            });
+        }
+    }
+
+    // ── URL sharing ──────────────────────────────────────────────────────────
+    function updateURL() {
+        const p = new URLSearchParams();
+        if (searchInput.value)       p.set('q',        searchInput.value);
+        if (filterStatut.value)      p.set('statut',   filterStatut.value);
+        if (filterType.value)        p.set('type',     filterType.value);
+        if (filterTradType.value)    p.set('tradtype', filterTradType.value);
+        if (filterTranslator.value)  p.set('trad',     filterTranslator.value);
+        if (sortBy.value !== 'nom')  p.set('sort',     sortBy.value);
+        if (ACTIVE_TAGS.size)        p.set('tags',     [...ACTIVE_TAGS].join(','));
+        const str = p.toString();
+        history.replaceState(null, '', (str ? '?' + str : location.pathname) + location.hash);
+    }
+
+    function readURLParams() {
+        const p = new URLSearchParams(location.search);
+        if (p.has('q'))        searchInput.value        = p.get('q');
+        if (p.has('statut'))   filterStatut.value       = p.get('statut');
+        if (p.has('type'))     filterType.value          = p.get('type');
+        if (p.has('tradtype')) filterTradType.value      = p.get('tradtype');
+        if (p.has('trad'))     filterTranslator.value    = p.get('trad');
+        if (p.has('sort'))     sortBy.value              = p.get('sort');
+        if (p.has('tags'))     p.get('tags').split(',').filter(Boolean).forEach(t => ACTIVE_TAGS.add(t.trim()));
+    }
+
+    // ── Highlight ─────────────────────────────────────────────────────────────
+    function highlight(text, query) {
+        if (!query) return escapeHtml(text);
+        const escaped = escapeHtml(text);
+        const safeQ = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return escaped.replace(new RegExp(safeQ, 'gi'), m => `<mark>${m}</mark>`);
+    }
+
+    // ── Tri par date de MAJ ───────────────────────────────────────────────────
+    function buildLastMajDateMap(entries) {
+        lastMajDateMap = new Map();
+        for (const e of entries) {
+            if (!e.date) continue;
+            const parts = e.date.split('/');
+            if (parts.length !== 3) continue;
+            const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+            e.games.split(',').forEach(g => {
+                const key = g.trim().toLowerCase();
+                if (!key) return;
+                if (!lastMajDateMap.has(key) || d > lastMajDateMap.get(key))
+                    lastMajDateMap.set(key, d);
+            });
+        }
+    }
+
+    // ── Active tags bar ───────────────────────────────────────────────────────
+    function renderActiveTags() {
+        const bar = document.getElementById('active-tags-bar');
+        bar.innerHTML = '';
+        ACTIVE_TAGS.forEach(tag => {
+            const chip = document.createElement('span');
+            chip.className = 'active-tag';
+            chip.innerHTML = `${escapeHtml(tag)}<button class="active-tag-remove" data-tag="${escapeHtml(tag)}" aria-label="Retirer ${escapeHtml(tag)}">×</button>`;
+            bar.appendChild(chip);
+        });
+    }
+
+    function toggleTag(tag) {
+        if (ACTIVE_TAGS.has(tag)) ACTIVE_TAGS.delete(tag);
+        else ACTIVE_TAGS.add(tag);
+        renderActiveTags();
+        render();
+    }
+
+    // ── Statistiques ──────────────────────────────────────────────────────────
+    let statsPeriod = 12;
+
+    function renderStats() {
+        const contentEl = document.getElementById('statsContent');
+        if (!contentEl) return;
+
+        const total      = GAMES_DATA.length;
+        const enCours    = GAMES_DATA.filter(g => g.statut === 'EN COURS').length;
+        const termines   = GAMES_DATA.filter(g => g.statut === 'TERMINÉ').length;
+        const abandonnes = GAMES_DATA.filter(g => g.statut === 'ABANDONNÉ').length;
+        const pctCompl   = total ? Math.round(termines / total * 100) : 0;
+
+        function countMap(arr) {
+            return arr.reduce((m, k) => { if (k) m.set(k, (m.get(k)||0)+1); return m; }, new Map());
+        }
+
+        const topMoteurs    = [...countMap(GAMES_DATA.map(g => g.type_moteur)).entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+        const topTrads      = [...countMap(GAMES_DATA.map(g => g.traducteur)).entries()].sort((a,b)=>b[1]-a[1]).slice(0,10);
+        const topTradTypes  = [...countMap(GAMES_DATA.map(g => g.type_trad)).entries()].sort((a,b)=>b[1]-a[1]);
+        const statutEntries = [...countMap(GAMES_DATA.map(g => g.statut)).entries()].sort((a,b)=>b[1]-a[1]);
+
+        const allTags = GAMES_DATA.flatMap(g => g.tags ? g.tags.split(',').map(t => t.trim()).filter(Boolean) : []);
+        const topTags = [...countMap(allTags).entries()].sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+        const now = new Date();
+        const months = [];
+        for (let i = statsPeriod - 1; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            months.push({
+                year: d.getFullYear(), month: d.getMonth(), maj: 0, ajout: 0,
+                label: d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
+            });
+        }
+        for (const e of MAJ_ENTRIES) {
+            if (!e.date) continue;
+            const parts = e.date.split('/');
+            if (parts.length !== 3) continue;
+            const d = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+            const idx = months.findIndex(m => m.year === d.getFullYear() && m.month === d.getMonth());
+            if (idx !== -1) {
+                months[idx].maj++;
+                if (majTypeClass(e.type) === 'maj-type-ajout') months[idx].ajout++;
+            }
+        }
+        const maxMonth = Math.max(...months.map(m => m.maj), 1);
+
+        function statutColor(statut) {
+            const s = (statut || '').toUpperCase();
+            if (s.includes('COURS'))   return '#6ea8fe';
+            if (s.includes('TERMIN'))  return '#63d99a';
+            if (s.includes('ABANDON')) return '#f08090';
+            return '#888';
+        }
+
+        function barRows(entries, opts) {
+            const { filterAttr, showPct, colorFn } = opts || {};
+            if (!entries.length) return '<div style="color:#666;font-size:.82rem">Aucune donnée</div>';
+            const max = entries[0][1];
+            return entries.map(([label, count]) => {
+                const pctStr    = showPct ? `<span class="stat-bar-pct">${Math.round(count / total * 100)}%</span>` : '';
+                const fillStyle = colorFn ? `background:${colorFn(label)}` : '';
+                const dataAttr  = filterAttr ? `data-filter="${filterAttr}" data-value="${escapeHtml(label)}"` : '';
+                const cls       = filterAttr ? 'stat-bar-row stat-bar-clickable' : 'stat-bar-row';
+                return `
+                <div class="${cls}" ${dataAttr}>
+                    <div class="stat-bar-label" title="${escapeHtml(label)}">${escapeHtml(label)}</div>
+                    <div class="stat-bar-wrap"><div class="stat-bar-fill" style="width:${Math.round(count/max*100)}%;${fillStyle}"></div></div>
+                    <div class="stat-bar-count">${count}${pctStr}</div>
+                </div>`;
+            }).join('');
+        }
+
+        contentEl.innerHTML = `
+            <div class="stat-cards">
+                <div class="stat-card"><div class="stat-card-value">${total}</div><div class="stat-card-label">Jeux total</div></div>
+                <div class="stat-card"><div class="stat-card-value">${enCours}</div><div class="stat-card-label">En cours</div></div>
+                <div class="stat-card"><div class="stat-card-value">${termines}</div><div class="stat-card-label">Terminés</div></div>
+                <div class="stat-card"><div class="stat-card-value">${abandonnes}</div><div class="stat-card-label">Abandonnés</div></div>
+                <div class="stat-card"><div class="stat-card-value">${pctCompl}%</div><div class="stat-card-label">Complétion</div></div>
+            </div>
+            <div class="stat-section">
+                <div class="stat-section-title">Répartition par statut</div>
+                ${barRows(statutEntries, { showPct: true, colorFn: statutColor })}
+            </div>
+            <div class="stat-section">
+                <div class="stat-section-title">Répartition par type de traduction</div>
+                ${barRows(topTradTypes, { showPct: true })}
+            </div>
+            <div class="stat-section">
+                <div class="stat-section-title">Top moteurs <span class="stat-section-hint">— cliquer pour filtrer</span></div>
+                ${barRows(topMoteurs, { filterAttr: 'moteur', showPct: true })}
+            </div>
+            <div class="stat-section">
+                <div class="stat-section-title">Top traducteurs <span class="stat-section-hint">— cliquer pour filtrer</span></div>
+                ${barRows(topTrads, { filterAttr: 'trad', showPct: true })}
+            </div>
+            <div class="stat-section">
+                <div class="stat-section-title">Top tags</div>
+                <div class="stat-tags-wrap">
+                    ${topTags.map(([tag, count]) => `<span class="stat-tag-chip" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}<span class="stat-tag-count">${count}</span></span>`).join('')}
+                </div>
+            </div>
+            <div class="stat-section">
+                <div class="stat-section-title" style="justify-content:space-between;align-items:center">
+                    <span>Activité mensuelle</span>
+                    <select id="statsPeriodSel" class="stat-period-sel">
+                        <option value="1">1 mois</option>
+                        <option value="3">3 mois</option>
+                        <option value="6">6 mois</option>
+                        <option value="12">12 mois</option>
+                        <option value="24">24 mois</option>
+                    </select>
+                </div>
+                <div class="stat-month-legend">
+                    <span class="stat-month-legend-dot" style="background:linear-gradient(to right,#6ea8fe,#a78bfa)"></span> MAJ totales
+                    &nbsp;<span class="stat-month-legend-dot" style="background:#63d99a"></span> dont Ajouts
+                </div>
+                <div class="stat-month-wrap">
+                    ${months.map(m => `
+                        <div class="stat-month-col">
+                            <div class="stat-month-bars">
+                                <div class="stat-month-bar stat-month-bar-maj"   style="height:${Math.round(m.maj/maxMonth*100)}%"   title="${m.maj} MAJ"></div>
+                                <div class="stat-month-bar stat-month-bar-ajout" style="height:${Math.round(m.ajout/maxMonth*100)}%" title="${m.ajout} ajout${m.ajout !== 1 ? 's' : ''}"></div>
+                            </div>
+                            <div class="stat-month-label">${m.label}</div>
+                        </div>`).join('')}
+                </div>
+            </div>`;
+
+        // ── Sélecteur de période ───────────────────────────────────────────────
+        const sel = document.getElementById('statsPeriodSel');
+        if (sel) {
+            sel.value = String(statsPeriod);
+            sel.addEventListener('change', () => { statsPeriod = parseInt(sel.value); renderStats(); });
+        }
+
+        // ── Barres cliquables (moteur + traducteur) ────────────────────────────
+        contentEl.querySelectorAll('[data-filter="moteur"]').forEach(el => {
+            el.addEventListener('click', () => {
+                filterType.value = el.dataset.value;
+                switchTab('jeux');
+                render();
+            });
+        });
+        contentEl.querySelectorAll('[data-filter="trad"]').forEach(el => {
+            el.addEventListener('click', () => {
+                filterTranslator.value = el.dataset.value;
+                switchTab('jeux');
+                render();
+            });
+        });
+
+        // ── Tags cliquables ────────────────────────────────────────────────────
+        contentEl.querySelectorAll('[data-tag]').forEach(el => {
+            el.addEventListener('click', () => {
+                toggleTag(el.dataset.tag);
+                switchTab('jeux');
+            });
+        });
+    }
+
+    // ── Dernière mise à jour (via meta.json) ─────────────────────────────────
+
+    async function fetchLastSync() {
+        try {
+            const res = await fetch('./data/meta.json');
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data || !data.updated_at) return;
+            const d = new Date(data.updated_at);
+            lastSyncLabel = 'Dernière mise à jour : ' + d.toLocaleString('fr-FR', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+            if (GAMES_DATA.length) render();
+        } catch (e) {}
+    }
+
+    // ── Chargement des jeux depuis le CSV statique ────────────────────────────
+
+    function saveCache(games) {
+        try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), games }));
+        } catch (e) {}
+    }
+
+    function loadCache() {
+        try {
+            const raw = localStorage.getItem(CACHE_KEY);
+            if (!raw) return null;
+            const data = JSON.parse(raw);
+            if (!data || !Array.isArray(data.games)) return null;
+            for (const g of data.games) {
+                if (!g._nameL) {
+                    g._nameL       = (g.nom        || '').toLowerCase();
+                    g._tagsL       = (g.tags        || '').toLowerCase();
+                    g._translatorL = (g.traducteur  || '').toLowerCase();
+                }
+            }
+            return data;
+        } catch (e) { return null; }
+    }
+
+    function normalizeGame(g) {
+        return {
+            ...g,
+            _nameL:       (g.nom       || '').toLowerCase(),
+            _tagsL:       (g.tags      || '').toLowerCase(),
+            _translatorL: (g.traducteur|| '').toLowerCase()
+        };
+    }
+
+    async function fetchGames(skipCacheDisplay) {
+        if (!skipCacheDisplay) { showProgress(); showSkeleton(); }
+        try {
+            const res  = await fetch('./data/jeux.csv');
+            advanceProgress();
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const text = await res.text();
+            const rows = parseCSV(text);
+
+            GAMES_DATA = rows.map(r => normalizeGame({
+                id:             parseInt(r.id) || null,
+                site:           r.site           || null,
+                nom:            r.nom            || '',
+                version:        r.version        || null,
+                trad_version:   r.trad_version   || null,
+                lien_trad:      r.lien_trad      || null,
+                statut:         r.statut         || null,
+                tags:           r.tags           || null,
+                type_moteur:    r.type_moteur    || null,
+                traducteur:     r.traducteur     || null,
+                relecteur:      r.relecteur      || null,
+                type_trad:      r.type_trad      || null,
+                ac:             r.ac === 'true',
+                image_url:      r.image_url      || null,
+                trad_url:       r.trad_url       || null,
+                translator_url: r.translator_url || null,
+                game_url:       r.id ? `https://f95zone.to/threads/${parseInt(r.id)}` : null
+            }));
+            dataSource = 'csv';
+            saveCache(GAMES_DATA);
+            buildGameIndex(GAMES_DATA);
+
+            const savedStatut   = filterStatut.value;
+            const savedType     = filterType.value;
+            const savedTradType = filterTradType.value;
+            const savedTrad     = filterTranslator.value;
+            populateFilters();
+            filterStatut.value      = savedStatut;
+            filterType.value        = savedType;
+            filterTradType.value    = savedTradType;
+            filterTranslator.value  = savedTrad;
+            hideSkeleton();
+            hideProgress();
+            render();
+            // Si l'onglet trad était en attente des données
+            if (document.getElementById('tradPanel').classList.contains('visible') && !tradLoaded) fetchTrad();
+        } catch (err) {
+            hideProgress();
+            if (!skipCacheDisplay) {
+                hideSkeleton();
+                loadingEl.style.display = 'none';
+                errorEl.style.display   = 'block';
+                errorEl.textContent     = `Erreur de chargement : ${err.message}`;
+            }
+        }
+    }
+
+    function populateFilters() {
+        while (filterType.options.length > 1)        filterType.remove(1);
+        while (filterTradType.options.length > 1)    filterTradType.remove(1);
+        const savedTrad = filterTranslator.value;
+        while (filterTranslator.options.length > 1)  filterTranslator.remove(1);
+
+        const types = [...new Set(GAMES_DATA.map(g => g.type_moteur).filter(Boolean))].sort();
+        types.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.textContent = t;
+            filterType.appendChild(opt);
+        });
+
+        const tradTypes = [...new Set(GAMES_DATA.map(g => g.type_trad).filter(Boolean))].sort();
+        tradTypes.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.textContent = t;
+            filterTradType.appendChild(opt);
+        });
+
+        const translators = [...new Set(GAMES_DATA.map(g => g.traducteur).filter(Boolean))].sort();
+        translators.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.textContent = t;
+            filterTranslator.appendChild(opt);
+        });
+        filterTranslator.value = savedTrad;
+    }
+
+    // ── Plateformes de téléchargement ────────────────────────────────────────
+
+    // Logo générique téléchargement (utilisé pour plateformes sans logo dédié)
+    const LOGO_DOWNLOAD = '<svg viewBox="0 0 24 24" class="btn-logo"><path d="M5 20h14v-2H5v2zm7-16v10.17l3.59-3.58L17 12l-5 5-5-5 1.41-1.41L13 14.17V4h-2z"/></svg>';
+
+    const PLATFORM_LOGOS = {
+        mega:     '<img src="./assets/logo/mega-nz.svg"                     class="btn-logo" alt="MEGA">',
+        gdrive:   '<img src="./assets/logo/google-drive.svg"                class="btn-logo" alt="Google Drive">',
+        proton:   '<img src="./assets/logo/proton-drive.svg"                class="btn-logo" alt="Proton Drive">',
+        f95:      '<img src="./assets/logo/f95.png"                         class="btn-logo" alt="F95Zone">',
+        kdrive:   '<img src="./assets/logo/infomaniak-kdrive-light.svg"     class="btn-logo" alt="kDrive">',
+        download: LOGO_DOWNLOAD
+    };
+
+    const PLATFORMS = [
+        { match: 'mega.nz',           color: '#D81920', logo: 'mega'     },
+        { match: 'drive.google.com',  color: '#1a73e8', logo: 'gdrive'   },
+        { match: 'drive.proton.me',   color: '#6D4AFF', logo: 'proton'   },
+        { match: 'proton.me',         color: '#6D4AFF', logo: 'proton'   },
+        { match: 'f95zone.to',        color: '#c0392b', logo: 'f95'      },
+        { match: 'infomaniak.com',    color: '#014FFF', logo: 'kdrive'   },
+        { match: 'lewdcorner.com',    color: '#555',    logo: 'download' },
+        { match: 'pages.dev',         color: '#555',    logo: 'download' }
+    ];
+
+    function getTradPlatform(url) {
+        if (!url) return { color: '#198754', logo: 'download' };
+        let host = '';
+        try { host = new URL(url).hostname; } catch(e) {}
+        for (const p of PLATFORMS) {
+            if (host.includes(p.match)) return p;
+        }
+        return { color: '#555', logo: 'download' };
+    }
+
+    // ── Rendu des cartes ──────────────────────────────────────────────────────
+
+    function statutBadgeClass(statut) {
+        if (statut === 'EN COURS') return 'badge-en-cours';
+        if (statut === 'TERMINÉ')  return 'badge-termine';
+        return 'badge-abandonne';
+    }
+
+    function escapeHtml(str) {
+        return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    const BATCH_SIZE = 48;
+    let currentFiltered = [];
+    let displayedCount  = 0;
+
+    const imgObserver = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            const wrap = entry.target;
+            const src  = wrap.dataset.src;
+            if (!src) continue;
+            wrap.classList.add('shimmer');
+            const img = document.createElement('img');
+            img.className      = 'card-img';
+            img.alt            = wrap.dataset.alt || '';
+            img.referrerPolicy = 'no-referrer';
+            img.src            = src;
+            img.onload  = () => { img.classList.add('visible'); wrap.classList.add('loaded'); };
+            img.onerror = () => { wrap.style.display = 'none'; };
+            wrap.appendChild(img);
+            delete wrap.dataset.src;
+            imgObserver.unobserve(wrap);
+        }
+    }, { rootMargin: '300px' });
+
+    function renderCard(game, navIdx) {
+        const clone = cardTpl.content.cloneNode(true);
+        const card  = clone.querySelector('.card');
+        const query = searchInput.value.toLowerCase().trim();
+
+        const imgWrap = card.querySelector('.card-img-wrap');
+        if (game.image_url) {
+            imgWrap.dataset.src = game.image_url;
+            imgWrap.dataset.alt = game.nom;
+        } else {
+            imgWrap.remove();
+        }
+
+        const titleEl = card.querySelector('.card-title');
+        if (game.game_url) {
+            const a = document.createElement('a');
+            a.href = game.game_url; a.target = '_blank'; a.rel = 'noopener';
+            a.innerHTML = highlight(game.nom, query);
+            titleEl.appendChild(a);
+        } else {
+            titleEl.innerHTML = highlight(game.nom, query);
+        }
+
+        const statutBadge = card.querySelector('.badge-statut');
+        statutBadge.textContent = game.statut;
+        statutBadge.classList.add(statutBadgeClass(game.statut));
+
+        const typeBadge = card.querySelector('.badge-type');
+        if (game.type_moteur) { typeBadge.textContent = game.type_moteur; }
+        else { typeBadge.remove(); }
+
+        const tradTypeBadge = card.querySelector('.badge-trad-type');
+        if (game.type_trad) { tradTypeBadge.textContent = game.type_trad; }
+        else { tradTypeBadge.remove(); }
+
+        // Badge NOUVEAU
+        if (RECENT_GAMES_SET.has((game.nom || '').toLowerCase())) {
+            const newBadge = document.createElement('span');
+            newBadge.className = 'badge badge-new';
+            newBadge.textContent = 'NOUVEAU';
+            card.querySelector('.card-meta').appendChild(newBadge);
+        }
+
+        // Badge ⚠ Retard
+        if (game.statut !== 'ABANDONNÉ' && game.version && game.trad_version && game.version !== game.trad_version) {
+            const b = document.createElement('span');
+            b.className = 'badge badge-decale';
+            b.title = `Jeu : ${game.version} | Trad : ${game.trad_version}`;
+            b.textContent = '⚠ Retard';
+            card.querySelector('.card-meta').appendChild(b);
+        }
+
+        const infoEl = card.querySelector('.card-info');
+        let infoHtml = `Version: <span>${escapeHtml(game.version)}</span> | Trad: <span>${escapeHtml(game.trad_version)}</span>`;
+        if (game.traducteur) {
+            const name = escapeHtml(game.traducteur);
+            const trad = game.translator_url
+                ? `<a href="${escapeHtml(game.translator_url)}" target="_blank" rel="noopener" style="color:#6ea8fe;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${name}</a>`
+                : `<span>${name}</span>`;
+            infoHtml += `<br>Traducteur: ${trad}`;
+        }
+        if (game.relecteur) infoHtml += ` | Relecteur: <span>${escapeHtml(game.relecteur)}</span>`;
+        infoEl.innerHTML = infoHtml;
+
+        const tagsEl = card.querySelector('.card-tags');
+        if (game.tags) {
+            tagsEl.innerHTML = game.tags.split(',').map(t => t.trim()).filter(Boolean)
+                .map(t => {
+                    const isActive = ACTIVE_TAGS.has(t);
+                    return `<span class="tag-chip${isActive ? ' tag-chip-active' : ''}" data-tag="${escapeHtml(t)}">${highlight(t, query)}</span>`;
+                }).join('');
+        } else { tagsEl.remove(); }
+
+        const linksEl = card.querySelector('.card-links');
+        if (game.game_url) {
+            const gameBtn = linksEl.querySelector('a');
+            gameBtn.href      = game.game_url;
+            gameBtn.innerHTML = `${PLATFORM_LOGOS.f95}<span>Page F95</span>`;
+        } else {
+            linksEl.querySelector('a').remove();
+        }
+
+        if (game.trad_url) {
+            const platform = getTradPlatform(game.trad_url);
+            const tradLink = document.createElement('a');
+            tradLink.className           = 'btn btn-trad';
+            tradLink.href                = game.trad_url;
+            tradLink.target              = '_blank';
+            tradLink.rel                 = 'noopener';
+            tradLink.style.background    = platform.color;
+            tradLink.innerHTML           = `${PLATFORM_LOGOS[platform.logo]}<span>Traduction</span>`;
+            linksEl.appendChild(tradLink);
+        } else if (game.lien_trad && game.lien_trad !== 'Traduction' && game.lien_trad !== 'Patch') {
+            const badge = document.createElement('span');
+            badge.className   = 'btn btn-integree';
+            badge.textContent = game.lien_trad;
+            linksEl.appendChild(badge);
+        }
+
+        return clone;
+    }
+
+    function appendBatch() {
+        const end = Math.min(displayedCount + BATCH_SIZE, currentFiltered.length);
+        if (displayedCount >= end) return;
+
+        const fragment = document.createDocumentFragment();
+        for (let i = displayedCount; i < end; i++) {
+            const frag = renderCard(currentFiltered[i], i);
+            const card = frag.querySelector('.card');
+            if (card) {
+                card.style.animationDelay = (i % BATCH_SIZE * 30) + 'ms';
+                card.dataset.gidx = i;
+            }
+            fragment.appendChild(frag);
+        }
+
+        fragment.querySelectorAll('.card-img-wrap[data-src]').forEach(w => imgObserver.observe(w));
+        grid.appendChild(fragment);
+        displayedCount = end;
+
+        stats.textContent = `${displayedCount}/${currentFiltered.length} affiché${displayedCount > 1 ? 's' : ''} sur ${GAMES_DATA.length}${lastSyncLabel ? ' | ' + lastSyncLabel : ''}`;
+    }
+
+    const sentinel = document.createElement('div');
+    sentinel.style.cssText = 'grid-column:1/-1;height:1px;';
+    const scrollObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && displayedCount < currentFiltered.length) {
+            appendBatch();
+            grid.appendChild(sentinel);
+        }
+    }, { rootMargin: '600px' });
+    scrollObserver.observe(sentinel);
+
+    // ── Filtrage / tri ────────────────────────────────────────────────────────
+
+    let debounceTimer;
+    function render() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(_render, 150);
+    }
+
+    function _render() {
+        hideSkeleton();
+        loadingEl.style.display = 'none';
+        const query     = searchInput.value.toLowerCase().trim();
+        const sStatut   = filterStatut.value;
+        const sType     = filterType.value;
+        const sTradType = filterTradType.value;
+        const sTrad     = filterTranslator.value;
+        const sort      = sortBy.value;
+
+        currentFiltered = GAMES_DATA.filter(g => {
+            if (query && !g._nameL.includes(query)
+                      && !g._tagsL.includes(query)
+                      && !g._translatorL.includes(query)) return false;
+            if (sStatut   && g.statut       !== sStatut)   return false;
+            if (sType     && g.type_moteur  !== sType)     return false;
+            if (sTradType && g.type_trad    !== sTradType) return false;
+            if (sTrad     && g.traducteur   !== sTrad)     return false;
+            if (ACTIVE_TAGS.size && ![...ACTIVE_TAGS].every(t => g._tagsL.includes(t.toLowerCase()))) return false;
+            return true;
+        });
+
+        currentFiltered.sort((a, b) => {
+            if (sort === 'nom')      return (a.nom || '').localeCompare(b.nom || '', 'fr');
+            if (sort === 'nom_desc') return (b.nom || '').localeCompare(a.nom || '', 'fr');
+            if (sort === 'statut')   return (a.statut || '').localeCompare(b.statut || '', 'fr') || (a.nom || '').localeCompare(b.nom || '', 'fr');
+            if (sort === 'recent')   return (lastMajDateMap.get(b._nameL) || new Date(0)) - (lastMajDateMap.get(a._nameL) || new Date(0));
+            return 0;
+        });
+
+        renderActiveTags();
+
+        saveFiltersState();
+        updateResetBtn();
+
+        if (currentFiltered.length === 0) {
+            grid.innerHTML = '<div class="no-results">Aucun jeu trouvé</div>';
+            stats.textContent = `0 jeu sur ${GAMES_DATA.length}`;
+            return;
+        }
+
+        grid.innerHTML = '';
+        displayedCount = 0;
+        appendBatch();
+        grid.appendChild(sentinel);
+    }
+
+    function saveFiltersState() {
+        try {
+            sessionStorage.setItem('gx_filters', JSON.stringify({
+                search: searchInput.value, statut: filterStatut.value,
+                type: filterType.value, tradType: filterTradType.value,
+                translator: filterTranslator.value, sort: sortBy.value
+            }));
+        } catch (e) {}
+        updateURL();
+    }
+
+    function restoreFiltersState() {
+        readURLParams(); // URL params have priority
+        try {
+            if (location.search) return; // URL params present → skip sessionStorage
+            const raw = sessionStorage.getItem('gx_filters');
+            if (!raw) return;
+            const f = JSON.parse(raw);
+            if (f.search)      searchInput.value        = f.search;
+            if (f.statut)      filterStatut.value       = f.statut;
+            if (f.type)        filterType.value          = f.type;
+            if (f.tradType)    filterTradType.value      = f.tradType;
+            if (f.translator)  filterTranslator.value    = f.translator;
+            if (f.sort)        sortBy.value              = f.sort;
+        } catch (e) {}
+    }
+
+    function hasActiveFilters() {
+        return searchInput.value || filterStatut.value || filterType.value ||
+               filterTradType.value || filterTranslator.value || sortBy.value !== 'nom' ||
+               ACTIVE_TAGS.size > 0;
+    }
+
+    function updateResetBtn() {
+        resetBtn.classList.toggle('visible', hasActiveFilters());
+    }
+
+    function resetFilters() {
+        searchInput.value = ''; filterStatut.value = ''; filterType.value = '';
+        filterTradType.value = ''; filterTranslator.value = ''; sortBy.value = 'nom';
+        ACTIVE_TAGS.clear(); renderActiveTags();
+        render();
+    }
+
+    // ── Onglet MAJ (depuis API locale) ────────────────────────────────────────
+
+    const MAJ_CACHE_KEY = 'gx_maj_cache';
+    let majLoaded = false;
+
+    async function fetchMaj() {
+        try {
+            const raw = localStorage.getItem(MAJ_CACHE_KEY);
+            if (raw) {
+                const data = JSON.parse(raw);
+                if (data && Array.isArray(data.entries) && data.entries.length > 0) {
+                    renderMaj(data.entries);
+                    buildRecentGamesSet(data.entries);
+                    buildLastMajDateMap(data.entries);
+                    if (Date.now() - data.ts > CACHE_TTL) loadMajFromAPI();
+                    return;
+                }
+            }
+        } catch (e) {}
+
+        majLoading.style.display = 'block';
+        loadMajFromAPI();
+    }
+
+    async function loadMajFromAPI() {
+        try {
+            const res = await fetch('./data/maj.csv');
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const text = await res.text();
+            const rows = parseCSV(text);
+            const entries = rows.map(r => ({
+                date:  r.date_maj ? formatDateFR(r.date_maj) : '',
+                type:  r.type  || '',
+                games: r.jeux  || ''
+            }));
+            try {
+                localStorage.setItem(MAJ_CACHE_KEY, JSON.stringify({ ts: Date.now(), entries }));
+            } catch (e) {}
+            renderMaj(entries);
+            buildRecentGamesSet(entries);
+            buildLastMajDateMap(entries);
+        } catch (err) {
+            majLoading.textContent = 'Erreur de chargement des mises à jour.';
+        }
+    }
+
+    function formatDateFR(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function majTypeClass(type) {
+        const t = (type || '').toUpperCase();
+        if (t.includes('AJOUT'))              return 'maj-type-ajout';
+        if (t.includes('MISE') || t.includes('MAJ')) return 'maj-type-maj';
+        return 'maj-type-other';
+    }
+
+    function renderMaj(entries, query) {
+        majLoaded = true;
+        majLoading.style.display = 'none';
+        MAJ_ENTRIES = entries;
+
+        const q = (query || '').toLowerCase().trim();
+        const filtered = q ? entries.filter(e =>
+            e.games.toLowerCase().includes(q) ||
+            e.type.toLowerCase().includes(q) ||
+            e.date.includes(q)
+        ) : entries;
+
+        const groups = [];
+        let lastDate = null;
+        for (const e of filtered) {
+            if (e.date !== lastDate) {
+                groups.push({ date: e.date, items: [] });
+                lastDate = e.date;
+            }
+            groups[groups.length - 1].items.push(e);
+        }
+
+        const fragment = document.createDocumentFragment();
+        for (const group of groups) {
+            const div     = document.createElement('div');
+            div.className = 'maj-date-group';
+
+            const dateEl     = document.createElement('div');
+            dateEl.className = 'maj-date';
+            dateEl.textContent = group.date;
+            div.appendChild(dateEl);
+
+            for (const item of group.items) {
+                const row     = document.createElement('div');
+                row.className = 'maj-entry';
+
+                const badge     = document.createElement('span');
+                badge.className = 'maj-type ' + majTypeClass(item.type);
+                badge.textContent = item.type;
+                row.appendChild(badge);
+
+                const gamesSpan     = document.createElement('span');
+                gamesSpan.className = 'maj-games';
+                gamesSpan.innerHTML = annotateGames(item.games);
+                row.appendChild(gamesSpan);
+
+                div.appendChild(row);
+            }
+            fragment.appendChild(div);
+        }
+
+        majContent.innerHTML = '';
+        majContent.appendChild(fragment);
+    }
+
+    function renderMajFiltered() {
+        renderMaj(MAJ_ENTRIES, majSearchInput.value);
+    }
+
+    // ── Onglet Informations (JSONP Google Sheets — inchangé) ──────────────────
+
+    const INFO_CACHE_KEY = 'gx_info_cache';
+    let infoLoaded = false;
+
+    function infoCallback(response) {
+        const scriptEl = document.getElementById('gsheet-info');
+        if (scriptEl) scriptEl.remove();
+        try {
+            const rows  = response.table.rows;
+            const lines = [];
+            for (const row of rows) {
+                const c = row.c;
+                lines.push(c && c[0] ? (c[0].v != null ? String(c[0].v) : '') : '');
+            }
+            try {
+                localStorage.setItem(INFO_CACHE_KEY, JSON.stringify({ ts: Date.now(), lines }));
+            } catch (e) {}
+            renderInfo(lines);
+        } catch (err) {
+            infoLoading.textContent = 'Erreur de chargement des informations.';
+        }
+    }
+    window.infoCallback = infoCallback;
+
+    function fetchInfo() {
+        try {
+            const raw = localStorage.getItem(INFO_CACHE_KEY);
+            if (raw) {
+                const data = JSON.parse(raw);
+                if (data && Array.isArray(data.lines) && data.lines.length > 0) {
+                    renderInfo(data.lines);
+                    if (Date.now() - data.ts > CACHE_TTL) loadInfoFromSheet();
+                    return;
+                }
+            }
+        } catch (e) {}
+        infoLoading.style.display = 'block';
+        loadInfoFromSheet();
+    }
+
+    function loadInfoFromSheet() {
+        const old = document.getElementById('gsheet-info');
+        if (old) old.remove();
+        const script = document.createElement('script');
+        script.id  = 'gsheet-info';
+        script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json;responseHandler:infoCallback&sheet=Informations`;
+        script.onerror = function() {
+            this.remove();
+            infoLoading.textContent = 'Erreur de chargement des informations.';
+        };
+        document.body.appendChild(script);
+    }
+
+    function isUrl(str) { return /^https?:\/\/\S+$/i.test(str.trim()); }
+
+    const SVG_ICONS = {
+        gamepad:   '<svg viewBox="0 0 24 24"><path d="M6 9h2v2H6zm4 0h2v2h-2zm10-4H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 12H4V7h16v10zm-4-6h2v2h-2z"/></svg>',
+        search:    '<svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>',
+        filter:    '<svg viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>',
+        cache:     '<svg viewBox="0 0 24 24"><path d="M13 2.05v2.02c3.95.49 7 3.85 7 7.93 0 1.45-.39 2.81-1.06 3.98l1.46 1.46A9.94 9.94 0 0 0 22 12c0-5.18-3.95-9.45-9-9.95zM12 20c-4.42 0-8-3.58-8-8 0-3.63 2.42-6.69 5.73-7.67l-.37-1.96A9.996 9.996 0 0 0 2 12c0 5.52 4.47 10 10 10 2.25 0 4.33-.75 6-2.02l-1.44-1.44A7.96 7.96 0 0 1 12 20z"/><path d="M11 7h2v6h-2zm0 8h2v2h-2z"/></svg>',
+        image:     '<svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>',
+        info:      '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>',
+        link:      '<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>',
+        discord:   '<svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.11 13.11 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.3 12.3 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.06.06 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>',
+        forum:     '<svg viewBox="0 0 24 24"><path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/></svg>',
+        extension: '<svg viewBox="0 0 24 24"><path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c1.49 0 2.7 1.21 2.7 2.7s-1.21 2.7-2.7 2.7H2V20c0 1.1.9 2 2 2h3.8v-1.5c0-1.49 1.21-2.7 2.7-2.7 1.49 0 2.7 1.21 2.7 2.7V22H17c1.1 0 2-.9 2-2v-4h1.5c1.38 0 2.5-1.12 2.5-2.5S21.88 11 20.5 11z"/></svg>'
+    };
+
+    const LINK_META = {
+        'discord:':             { icon: 'discord',   name: 'Discord F95',    color: '#5865F2', desc: 'Communauté F95Zone' },
+        'discord fr:':          { icon: 'discord',   name: 'Discord FR',     color: '#5865F2', desc: 'Communauté F95 France' },
+        'thread f95:':          { icon: 'forum',     name: 'Thread F95',     color: '#e94560', desc: 'Forum de discussion' },
+        'extension f95 france:':{ icon: 'extension', name: 'Extension F95',  color: '#fdba74', desc: 'Plugin navigateur' }
+    };
+
+    // Overrides d'URLs (prennent le dessus sur les valeurs du Google Sheet)
+    const URL_OVERRIDES = {
+        'discord:':    'https://discord.f95zone.to/',
+        'thread f95:': 'https://f95zone.to/threads/26002'
+    };
+
+    // Liens fixes injectés en complément du Google Sheet
+    const EXTRA_LINKS = [
+        { label: 'Discord FR:', url: 'https://discord.gg/QXd9kr3ewW' }
+    ];
+
+    function renderInfo(lines) {
+        infoLoaded = true;
+        infoLoading.style.display = 'none';
+
+        const links = [];
+        let i = 1;
+        while (i < lines.length) {
+            const line = lines[i];
+            if (line && line.endsWith(':') && i + 1 < lines.length && isUrl(lines[i + 1])) {
+                const key = line.toLowerCase();
+                const url = URL_OVERRIDES[key] || lines[i + 1].trim();
+                links.push({ label: line, url });
+                i += 2;
+            } else { i++; }
+        }
+        for (const el of EXTRA_LINKS) links.push(el);
+
+        const fragment = document.createDocumentFragment();
+
+        const hero = document.createElement('div');
+        hero.className = 'info-hero';
+        hero.innerHTML = `
+            <div class="info-hero-icon"><img src="./assets/logo/gtf95.png" alt="Game Translate FR"></div>
+            <h2><span>Game Translate</span> FR</h2>
+            <div class="info-hero-sub">Interface web pour le tableur communautaire de traductions françaises de jeux.</div>
+        `;
+        fragment.appendChild(hero);
+
+        const about = document.createElement('div');
+        about.className = 'info-about';
+        about.innerHTML = `
+            <div class="info-about-title">${SVG_ICONS.info} À propos</div>
+            Game Translate FR est une interface communautaire dédiée aux traductions françaises de jeux. Ce projet est basé sur le travail de
+            <a href="https://f95zone.to/members/k3652.1657068/" target="_blank" rel="noopener" style="color:#e94560;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">K3652</a>,
+            créateur du tableur Google Sheets original.
+            Les données sont collectées et traitées automatiquement à intervalles réguliers, puis servies via une API afin de garantir un affichage toujours à jour. La navigation est enrichie d'une recherche instantanée, de filtres et d'un affichage visuel optimisé.
+        `;
+        fragment.appendChild(about);
+
+        const features = [
+            { icon: 'search', title: 'Recherche', desc: 'Trouvez un jeu par nom, tag ou traducteur',          bg: '#0d6efd22', fill: '#6ea8fe' },
+            { icon: 'filter', title: 'Filtres',   desc: 'Par statut, moteur de jeu et type de traduction',    bg: '#6f42c122', fill: '#b197fc' },
+            { icon: 'image',  title: 'Visuels',   desc: 'Aperçu des jeux avec chargement optimisé',           bg: '#e9456022', fill: '#e94560' }
+        ];
+        const featGrid = document.createElement('div');
+        featGrid.className = 'info-features';
+        for (const f of features) {
+            const card = document.createElement('div');
+            card.className = 'info-feature';
+            card.innerHTML = `
+                <div class="info-feature-icon" style="background:${f.bg}">
+                    <svg viewBox="0 0 24 24" style="fill:${f.fill}">${SVG_ICONS[f.icon].match(/<svg[^>]*>([\s\S]*)<\/svg>/)[1]}</svg>
+                </div>
+                <div class="info-feature-title">${f.title}</div>
+                <div class="info-feature-desc">${f.desc}</div>
+            `;
+            featGrid.appendChild(card);
+        }
+        fragment.appendChild(featGrid);
+
+        if (links.length > 0) {
+            const sectionTitle = document.createElement('div');
+            sectionTitle.className = 'info-section-title';
+            sectionTitle.innerHTML = `${SVG_ICONS.link} Liens utiles`;
+            fragment.appendChild(sectionTitle);
+
+            const linksGrid = document.createElement('div');
+            linksGrid.className = 'info-links-grid';
+
+            for (const lnk of links) {
+                const meta = LINK_META[lnk.label.toLowerCase()] || { icon: 'link', name: lnk.label.replace(/:$/, ''), color: '#888', desc: '' };
+                const a = document.createElement('a');
+                a.className = 'info-link-card';
+                a.href = lnk.url; a.target = '_blank'; a.rel = 'noopener';
+                const iconSvgInner = SVG_ICONS[meta.icon].match(/<svg[^>]*>([\s\S]*)<\/svg>/)[1];
+                a.innerHTML = `
+                    <div class="info-link-icon" style="background:${meta.color}22">
+                        <svg viewBox="0 0 24 24" style="fill:${meta.color}">${iconSvgInner}</svg>
+                    </div>
+                    <div class="info-link-text">
+                        <div class="info-link-name">${escapeHtml(meta.name)}</div>
+                        <div class="info-link-url">${meta.desc || escapeHtml(lnk.url)}</div>
+                    </div>
+                `;
+                linksGrid.appendChild(a);
+            }
+            fragment.appendChild(linksGrid);
+        }
+
+        infoContent.innerHTML = '';
+        infoContent.appendChild(fragment);
+    }
+
+    // ── Index jeux → liens cliquables dans MAJ ────────────────────────────────
+
+    let gamesMap  = new Map(); // nom.toLowerCase() → index dans GAMES_DATA
+    let gameRegex = null;
+
+    function buildGameIndex(games) {
+        gamesMap = new Map();
+        for (let i = 0; i < games.length; i++) {
+            if (games[i].nom) gamesMap.set(games[i].nom.toLowerCase(), i);
+        }
+        // Noms triés du plus long au plus court → évite les correspondances partielles
+        const escaped = [...gamesMap.keys()]
+            .filter(n => n.length >= 3)
+            .sort((a, b) => b.length - a.length)
+            .map(n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        gameRegex = escaped.length ? new RegExp(`(${escaped.join('|')})`, 'gi') : null;
+    }
+
+    function annotateGames(text) {
+        if (!text || !gameRegex) return escapeHtml(text || '');
+        let result = '', last = 0;
+        gameRegex.lastIndex = 0;
+        let m;
+        while ((m = gameRegex.exec(text)) !== null) {
+            result += escapeHtml(text.slice(last, m.index));
+            const idx = gamesMap.get(m[0].toLowerCase());
+            result += idx !== undefined
+                ? `<span class="game-link" data-idx="${idx}">${escapeHtml(m[0])}</span>`
+                : escapeHtml(m[0]);
+            last = m.index + m[0].length;
+        }
+        return result + escapeHtml(text.slice(last));
+    }
+
+    function openGameModal(navIdx, navList) {
+        if (navList) { modalNavList = navList; modalNavIdx = navIdx; }
+        const game = modalNavList.length > 0 ? modalNavList[modalNavIdx] : GAMES_DATA[navIdx];
+        if (!game) return;
+
+        const imgEl   = document.getElementById('modal-img');
+        const titleEl = document.getElementById('modal-title');
+        const metaEl  = document.getElementById('modal-meta');
+        const infoEl  = document.getElementById('modal-info');
+        const linksEl = document.getElementById('modal-links');
+        const tagsEl  = document.getElementById('modal-tags');
+        const modalPrev = document.getElementById('modalPrev');
+        const modalNext = document.getElementById('modalNext');
+
+        // Update nav buttons
+        if (modalNavList.length > 1) {
+            modalPrev.disabled = modalNavIdx <= 0;
+            modalNext.disabled = modalNavIdx >= modalNavList.length - 1;
+            modalPrev.style.display = '';
+            modalNext.style.display = '';
+        } else {
+            modalPrev.style.display = 'none';
+            modalNext.style.display = 'none';
+        }
+
+        if (game.image_url) {
+            imgEl.innerHTML = `<img src="${escapeHtml(game.image_url)}" referrerpolicy="no-referrer" alt="${escapeHtml(game.nom)}">`;
+            imgEl.style.display = '';
+        } else {
+            imgEl.innerHTML = ''; imgEl.style.display = 'none';
+        }
+
+        titleEl.innerHTML = game.game_url
+            ? `<a href="${escapeHtml(game.game_url)}" target="_blank" rel="noopener">${escapeHtml(game.nom)}</a>`
+            : escapeHtml(game.nom);
+
+        let metaHtml = `<span class="badge ${statutBadgeClass(game.statut)}">${escapeHtml(game.statut||'')}</span>`;
+        if (game.type_moteur) metaHtml += `<span class="badge badge-type">${escapeHtml(game.type_moteur)}</span>`;
+        if (game.type_trad)   metaHtml += `<span class="badge badge-trad-type">${escapeHtml(game.type_trad)}</span>`;
+        if (game.statut !== 'ABANDONNÉ' && game.version && game.trad_version && game.version !== game.trad_version)
+            metaHtml += `<span class="badge badge-decale" title="Jeu : ${escapeHtml(game.version)} | Trad : ${escapeHtml(game.trad_version)}">⚠ Retard</span>`;
+        metaEl.innerHTML = metaHtml;
+
+        let infoHtml = `Version: <span>${escapeHtml(game.version||'—')}</span> | Trad: <span>${escapeHtml(game.trad_version||'—')}</span>`;
+        if (game.traducteur) {
+            const name = escapeHtml(game.traducteur);
+            infoHtml += `<br>Traducteur: ${game.translator_url
+                ? `<a href="${escapeHtml(game.translator_url)}" target="_blank" rel="noopener" style="color:#6ea8fe;text-decoration:none">${name}</a>`
+                : `<span>${name}</span>`}`;
+        }
+        if (game.relecteur) infoHtml += ` | Relecteur: <span>${escapeHtml(game.relecteur)}</span>`;
+        infoEl.innerHTML = infoHtml;
+        tagsEl.textContent = game.tags || '';
+
+        let linksHtml = '';
+        if (game.game_url) {
+            linksHtml += `<a class="btn btn-game" href="${escapeHtml(game.game_url)}" target="_blank" rel="noopener">${PLATFORM_LOGOS.f95}<span>Page F95</span></a>`;
+        }
+        if (game.trad_url) {
+            const p = getTradPlatform(game.trad_url);
+            linksHtml += `<a class="btn btn-trad" href="${escapeHtml(game.trad_url)}" target="_blank" rel="noopener" style="background:${p.color}">${PLATFORM_LOGOS[p.logo]}<span>Traduction</span></a>`;
+        } else if (game.lien_trad && game.lien_trad !== 'Traduction' && game.lien_trad !== 'Patch') {
+            linksHtml += `<span class="btn btn-integree">${escapeHtml(game.lien_trad)}</span>`;
+        }
+        linksEl.innerHTML = linksHtml;
+
+        // Historique MAJ
+        const histEl = document.getElementById('modal-history-list');
+        const histContainer = document.getElementById('modal-history');
+        const gameName = (game.nom || '').toLowerCase();
+        const history = MAJ_ENTRIES.filter(e =>
+            e.games.toLowerCase().split(',').map(s => s.trim()).includes(gameName)
+        );
+        if (history.length > 0) {
+            histEl.innerHTML = history.slice(0, 8).map(e =>
+                `<div class="modal-history-entry">
+                    <span class="mh-date">${escapeHtml(e.date)}</span>
+                    <span class="maj-type ${majTypeClass(e.type)}">${escapeHtml(e.type)}</span>
+                </div>`
+            ).join('');
+            histContainer.style.display = '';
+        } else {
+            histContainer.style.display = 'none';
+        }
+
+        document.getElementById('game-modal').classList.add('visible');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeGameModal() {
+        document.getElementById('game-modal').classList.remove('visible');
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { closeGameModal(); closeTradModal(); }
+        if (e.key === 'ArrowLeft'  && document.getElementById('game-modal').classList.contains('visible')) {
+            if (modalNavIdx > 0) { modalNavIdx--; openGameModal(modalNavIdx); }
+        }
+        if (e.key === 'ArrowRight' && document.getElementById('game-modal').classList.contains('visible')) {
+            if (modalNavIdx < modalNavList.length - 1) { modalNavIdx++; openGameModal(modalNavIdx); }
+        }
+    });
+
+    // ── Onglet Traducteurs / Relecteurs ──────────────────────────────────────
+
+    function fetchTrad() {
+        // Reconstruction depuis GAMES_DATA (pas d'API dédiée en mode statique)
+        if (!GAMES_DATA.length) {
+            // Les jeux ne sont pas encore chargés — on retente après fetchGames
+            document.getElementById('tradLoading').textContent = 'En attente des données jeux...';
+            return;
+        }
+        const tradMap = new Map();
+        for (const g of GAMES_DATA) {
+            if (g.traducteur) {
+                const nom = g.traducteur.trim();
+                if (!tradMap.has(nom)) tradMap.set(nom, { nom, nb_trad: 0, nb_relecture: 0 });
+                tradMap.get(nom).nb_trad++;
+            }
+            if (g.relecteur) {
+                g.relecteur.split(',').forEach(r => {
+                    const nom = r.trim();
+                    if (!nom) return;
+                    if (!tradMap.has(nom)) tradMap.set(nom, { nom, nb_trad: 0, nb_relecture: 0 });
+                    tradMap.get(nom).nb_relecture++;
+                });
+            }
+        }
+        TRAD_DATA = [...tradMap.values()].sort((a, b) =>
+            (b.nb_trad + b.nb_relecture) - (a.nb_trad + a.nb_relecture));
+        document.getElementById('tradLoading').style.display = 'none';
+        renderTrad();
+        tradLoaded = true;
+    }
+
+    function renderTrad(query) {
+        const q = (query || '').toLowerCase().trim();
+        const filtered = q ? TRAD_DATA.filter(t => (t.nom || '').toLowerCase().includes(q)) : TRAD_DATA;
+        const grid = document.getElementById('tradGrid');
+        grid.innerHTML = '';
+        if (!filtered.length) {
+            grid.innerHTML = '<div style="color:#666;padding:40px 0;text-align:center;grid-column:1/-1">Aucun contributeur trouvé</div>';
+            return;
+        }
+        const fragment = document.createDocumentFragment();
+        for (const t of filtered) {
+            const card = document.createElement('div');
+            card.className = 'trad-card';
+            card.innerHTML = `
+                <div class="trad-card-name">${escapeHtml(t.nom)}</div>
+                <div class="trad-card-stats">
+                    <div class="trad-stat">
+                        <div class="trad-stat-value">${t.nb_trad || 0}</div>
+                        <div class="trad-stat-label">Traductions</div>
+                    </div>
+                    <div class="trad-stat">
+                        <div class="trad-stat-value">${t.nb_relecture || 0}</div>
+                        <div class="trad-stat-label">Relectures</div>
+                    </div>
+                </div>`;
+            card.addEventListener('click', () => openTradModal(t));
+            fragment.appendChild(card);
+        }
+        grid.appendChild(fragment);
+    }
+
+    function openTradModal(trad) {
+        const nom = trad.nom;
+        const jeuxTrad   = GAMES_DATA.filter(g => g.traducteur === nom);
+        const jeuxRelect = GAMES_DATA.filter(g => g.relecteur &&
+            g.relecteur.split(',').map(s => s.trim()).includes(nom));
+
+        document.getElementById('trad-modal-name').textContent = nom;
+
+        document.getElementById('trad-modal-stats').innerHTML = `
+            <div class="trad-modal-stat">
+                <div class="trad-modal-stat-value">${trad.nb_trad || jeuxTrad.length}</div>
+                <div class="trad-modal-stat-label">Traductions</div>
+            </div>
+            <div class="trad-modal-stat">
+                <div class="trad-modal-stat-value">${trad.nb_relecture || jeuxRelect.length}</div>
+                <div class="trad-modal-stat-label">Relectures</div>
+            </div>`;
+
+        const metaEl = document.getElementById('trad-modal-meta');
+        metaEl.innerHTML = '';
+        metaEl.style.display = 'none';
+
+        const gamesEl = document.getElementById('trad-modal-games');
+        let gamesHtml = '';
+
+        if (jeuxTrad.length) {
+            gamesHtml += `<div class="trad-games-section">
+                <div class="trad-games-title">Jeux traduits (${jeuxTrad.length})</div>`;
+            for (const g of jeuxTrad) {
+                const href = g.game_url || '#';
+                gamesHtml += `<a class="trad-game-link" href="${escapeHtml(href)}" target="_blank" rel="noopener">
+                    <span>${escapeHtml(g.nom)}</span>
+                    <span class="trad-game-statut">${escapeHtml(g.statut || '')}</span>
+                </a>`;
+            }
+            gamesHtml += '</div>';
+        }
+
+        if (jeuxRelect.length) {
+            gamesHtml += `<div class="trad-games-section">
+                <div class="trad-games-title">Jeux relus (${jeuxRelect.length})</div>`;
+            for (const g of jeuxRelect) {
+                const href = g.game_url || '#';
+                gamesHtml += `<a class="trad-game-link" href="${escapeHtml(href)}" target="_blank" rel="noopener">
+                    <span>${escapeHtml(g.nom)}</span>
+                    <span class="trad-game-statut">${escapeHtml(g.statut || '')}</span>
+                </a>`;
+            }
+            gamesHtml += '</div>';
+        }
+
+        if (!gamesHtml) {
+            gamesHtml = '<div class="trad-modal-empty">Aucun jeu associé trouvé dans les données.</div>';
+        }
+        gamesEl.innerHTML = gamesHtml;
+
+        document.getElementById('trad-modal').classList.add('visible');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeTradModal() {
+        document.getElementById('trad-modal').classList.remove('visible');
+        document.body.style.overflow = '';
+    }
+
+    // ── Navigation par onglets ────────────────────────────────────────────────
+
+    const tabJeux    = document.getElementById('tabJeux');
+    const tabMaj     = document.getElementById('tabMaj');
+    const tabInfo    = document.getElementById('tabInfo');
+    const tabTrad    = document.getElementById('tabTrad');
+    const tabStats   = document.getElementById('tabStats');
+    const majPanel   = document.getElementById('majPanel');
+    const infoPanel  = document.getElementById('infoPanel');
+    const tradPanel  = document.getElementById('tradPanel');
+    const statsPanel = document.getElementById('statsPanel');
+    const newsPanel  = document.getElementById('newsPanel');
+    const tabNews    = document.getElementById('tabNews');
+    let newsLoaded   = false;
+    const infoLoading= document.getElementById('infoLoading');
+    const infoContent= document.getElementById('infoContent');
+    const majLoading = document.getElementById('majLoading');
+    const majContent = document.getElementById('majContent');
+    const controlsEl = document.getElementById('controls');
+
+    let controlsCollapsed = false;
+
+    // ── Onglet F95 — News ─────────────────────────────────────────────────────
+
+    const NEWS_CAT_COLORS = {
+        'Games':              { bg: '#1e3a5f', color: '#60a5fa', border: '#2563eb44' },
+        'Mods':               { bg: '#2d1f4e', color: '#a78bfa', border: '#7c3aed44' },
+        'Comics':             { bg: '#14382e', color: '#34d399', border: '#10b98144' },
+        'Asset Releases':     { bg: '#2d2005', color: '#fbbf24', border: '#d9770644' },
+        'Asset Requests':     { bg: '#2d2005', color: '#fbbf24', border: '#d9770644' },
+        'Animations & Loops': { bg: '#2d0f25', color: '#f472b6', border: '#db277744' },
+    };
+
+    function newsCatStyle(cat) {
+        const c = NEWS_CAT_COLORS[cat] || { bg: '#1a2535', color: '#94a3b8', border: '#33445544' };
+        return `background:${c.bg};color:${c.color};border:1px solid ${c.border}`;
+    }
+
+    function newsFormatDate(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        if (isNaN(d)) return '';
+        const diff = Date.now() - d.getTime();
+        if (diff < 3600000)  return `il y a ${Math.floor(diff / 60000)}min`;
+        if (diff < 86400000) return `il y a ${Math.floor(diff / 3600000)}h`;
+        return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function renderNews(items) {
+        const grid = document.getElementById('newsGrid');
+        if (!items.length) {
+            grid.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b">Aucune actualité disponible.</div>';
+            grid.style.display = '';
+            return;
+        }
+        grid.innerHTML = items.map(item => {
+            // Les chemins /data/... sont absolus côté serveur, on les rend relatifs pour GitHub Pages
+            const imgSrc = item.imageUrl ? item.imageUrl.replace(/^\//, './') : null;
+            const img = imgSrc
+                ? `<div class="news-card-img-wrap"><img class="news-card-img" src="${escapeHtml(imgSrc)}" loading="lazy" alt="" onerror="this.parentNode.style.display='none'"></div>`
+                : '';
+            const cat = item.category
+                ? `<span class="news-category" style="${newsCatStyle(item.category)}">${escapeHtml(item.category)}</span>`
+                : '';
+            const ago  = newsFormatDate(item.pubDate);
+            const cmts = item.comments > 0
+                ? `<span>💬 ${item.comments.toLocaleString('fr-FR')}</span>`
+                : '';
+            return `<a class="news-card" href="${escapeHtml(item.link)}" target="_blank" rel="noopener">
+                ${img}
+                <div class="news-card-body">
+                    ${cat}
+                    <div class="news-title">${escapeHtml(item.title)}</div>
+                    <div class="news-meta">
+                        ${item.author ? `<span>👤 ${escapeHtml(item.author)}</span>` : ''}
+                        ${ago ? `<span>🕐 ${ago}</span>` : ''}
+                        ${cmts}
+                    </div>
+                </div>
+            </a>`;
+        }).join('');
+        grid.style.display = '';
+    }
+
+    async function fetchNews() {
+        try {
+            const res = await fetch('./data/news.json');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            document.getElementById('newsLoading').style.display = 'none';
+            renderNews(data.items || []);
+            if (data.updated_at) {
+                const upd = document.getElementById('newsUpdated');
+                upd.textContent = `Mis à jour : ${new Date(data.updated_at).toLocaleString('fr-FR')}`;
+                upd.style.display = '';
+            }
+            newsLoaded = true;
+        } catch (e) {
+            document.getElementById('newsLoading').textContent = 'Impossible de charger les actualités.';
+        }
+    }
+
+    function switchTab(tab, pushHash) {
+        tabJeux.classList.remove('active');
+        tabMaj.classList.remove('active');
+        tabInfo.classList.remove('active');
+        tabTrad.classList.remove('active');
+        tabStats.classList.remove('active');
+        tabNews.classList.remove('active');
+        grid.style.display      = 'none';
+        controlsEl.style.display= 'none';
+        stats.style.display     = 'none';
+        majPanel.classList.remove('visible');
+        infoPanel.classList.remove('visible');
+        tradPanel.classList.remove('visible');
+        statsPanel.classList.remove('visible');
+        newsPanel.classList.remove('visible');
+
+        if (tab === 'maj') {
+            tabMaj.classList.add('active');
+            majPanel.classList.add('visible');
+            if (!majLoaded) fetchMaj();
+        } else if (tab === 'info') {
+            tabInfo.classList.add('active');
+            infoPanel.classList.add('visible');
+            if (!infoLoaded) fetchInfo();
+        } else if (tab === 'trad') {
+            tabTrad.classList.add('active');
+            tradPanel.classList.add('visible');
+            if (!tradLoaded) fetchTrad();
+        } else if (tab === 'stats') {
+            tabStats.classList.add('active');
+            statsPanel.classList.add('visible');
+            renderStats();
+        } else if (tab === 'news') {
+            tabNews.classList.add('active');
+            newsPanel.classList.add('visible');
+            if (!newsLoaded) fetchNews();
+        } else {
+            tab = 'jeux';
+            tabJeux.classList.add('active');
+            grid.style.display       = '';
+            controlsEl.style.display = '';
+            if (controlsCollapsed) controlsEl.classList.add('collapsed');
+            stats.style.display      = '';
+        }
+
+        if (pushHash !== false) {
+            history.replaceState(null, '', tab === 'jeux' ? location.pathname + location.search : '#' + tab);
+        }
+    }
+
+    tabJeux.addEventListener('click',  () => switchTab('jeux'));
+    tabMaj.addEventListener ('click',  () => switchTab('maj'));
+    tabInfo.addEventListener('click',  () => switchTab('info'));
+    tabTrad.addEventListener('click',  () => switchTab('trad'));
+    tabStats.addEventListener('click', () => switchTab('stats'));
+    tabNews.addEventListener ('click', () => switchTab('news'));
+    majPanel.addEventListener('click', (e) => {
+        const el = e.target.closest('.game-link');
+        if (el) openGameModal(parseInt(el.dataset.idx), GAMES_DATA);
+    });
+    window.addEventListener('hashchange', () => {
+        const h = location.hash.replace('#', '') || 'jeux';
+        switchTab(h, false);
+    });
+
+    // ── Misc UI ───────────────────────────────────────────────────────────────
+
+    window.addEventListener('scroll', () => {
+        backToTopBtn.classList.toggle('visible', window.scrollY > 600);
+    }, { passive: true });
+
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    toggleControlsBtn.addEventListener('click', () => {
+        controlsCollapsed = !controlsCollapsed;
+        controlsEl.classList.toggle('collapsed', controlsCollapsed);
+        toggleControlsBtn.textContent = controlsCollapsed ? 'Filtres +' : 'Filtres';
+    });
+    if (window.innerWidth <= 768) {
+        controlsCollapsed = true;
+        controlsEl.classList.add('collapsed');
+        toggleControlsBtn.textContent = 'Filtres +';
+    }
+
+    searchInput.addEventListener('input',  render);
+    filterStatut.addEventListener('change', render);
+    filterType.addEventListener('change',   render);
+    filterTradType.addEventListener('change', render);
+    sortBy.addEventListener('change',       render);
+    resetBtn.addEventListener('click',      resetFilters);
+
+    // Tag chips event delegation (multi-sélection)
+    grid.addEventListener('click', e => {
+        const chip = e.target.closest('.tag-chip');
+        if (chip) toggleTag(chip.dataset.tag);
+    });
+
+    // Active tags bar — retrait des tags
+    document.getElementById('active-tags-bar').addEventListener('click', e => {
+        const btn = e.target.closest('.active-tag-remove');
+        if (btn) toggleTag(btn.dataset.tag);
+    });
+
+    // Copy link button
+    document.getElementById('copyLinkBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(location.href).then(() => {
+            const btn = document.getElementById('copyLinkBtn');
+            const prev = btn.textContent;
+            btn.textContent = '✓';
+            btn.style.color = '#63d99a';
+            setTimeout(() => { btn.textContent = prev; btn.style.color = ''; }, 2000);
+        });
+    });
+
+    // View toggle
+    viewToggle.addEventListener('click', () => {
+        listMode = !listMode;
+        grid.classList.toggle('list-mode', listMode);
+        viewToggle.textContent = listMode ? '⊟' : '⊞';
+        viewToggle.title = listMode ? 'Vue grille' : 'Vue liste';
+    });
+
+    // MAJ search
+    let majSearchTimer;
+    majSearchInput.addEventListener('input', () => {
+        clearTimeout(majSearchTimer);
+        majSearchTimer = setTimeout(renderMajFiltered, 200);
+    });
+
+    // Modal nav
+    document.getElementById('modalPrev').addEventListener('click', () => {
+        if (modalNavIdx > 0) { modalNavIdx--; openGameModal(modalNavIdx); }
+    });
+    document.getElementById('modalNext').addEventListener('click', () => {
+        if (modalNavIdx < modalNavList.length - 1) { modalNavIdx++; openGameModal(modalNavIdx); }
+    });
+
+    filterTranslator.addEventListener('change', render);
+
+    // Trad search
+    let tradSearchTimer;
+    document.getElementById('tradSearch').addEventListener('input', e => {
+        clearTimeout(tradSearchTimer);
+        tradSearchTimer = setTimeout(() => renderTrad(e.target.value), 200);
+    });
+
+    // ── Démarrage ─────────────────────────────────────────────────────────────
+
+    (function init() {
+        fetchLastSync();
+        // Pre-load RECENT_GAMES_SET from MAJ cache if available
+        try {
+            const majRaw = localStorage.getItem(MAJ_CACHE_KEY);
+            if (majRaw) {
+                const majData = JSON.parse(majRaw);
+                if (majData && Array.isArray(majData.entries)) {
+                    buildRecentGamesSet(majData.entries);
+                    buildLastMajDateMap(majData.entries);
+                }
+            }
+        } catch(e) {}
+        const cached = loadCache();
+        if (cached && cached.games.length > 0) {
+            GAMES_DATA = cached.games;
+            dataSource = 'cache';
+            buildGameIndex(GAMES_DATA);
+            populateFilters();
+            restoreFiltersState();
+            render();
+            if (Date.now() - cached.ts > CACHE_TTL) fetchGames(true);
+        } else {
+            fetchGames();
+        }
+
+        const hash = location.hash.replace('#', '');
+        if (['maj', 'info', 'trad', 'stats', 'news'].includes(hash)) switchTab(hash, false);
+    })();
+    </script>
+
+    <script data-goatcounter="https://theblackcat47.goatcounter.com/count"
+            async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
