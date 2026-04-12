@@ -680,10 +680,16 @@
 
         /* ── List mode ── */
         .list-mode { grid-template-columns: 1fr !important; }
-        .list-mode .card { display:flex; flex-direction:row; max-height:110px; }
-        .list-mode .card-img-wrap { width:80px; min-width:80px; height:110px; flex-shrink:0; }
+        .list-mode .card { display:flex; flex-direction:row; height:90px; max-height:90px; contain:layout style; }
+        .list-mode .card-img-wrap { width:80px; min-width:80px; height:90px; flex-shrink:0; }
+        .list-mode .card-body { flex:1; min-width:0; overflow:hidden; padding:8px 12px;
+                                display:flex; flex-direction:column; justify-content:center; gap:3px; }
+        .list-mode .card-title { font-size:.9rem; margin-bottom:0; white-space:nowrap;
+                                 overflow:hidden; text-overflow:ellipsis; }
+        .list-mode .card-meta { flex-wrap:nowrap; overflow:hidden; margin-bottom:0; gap:4px; }
+        .list-mode .card-info { font-size:.75rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
         .list-mode .card-tags { display:none; }
-        .list-mode .card-links { flex-shrink:0; }
+        .list-mode .card-links { flex-shrink:0; align-self:center; margin-top:0; padding:0 10px; }
 
         /* ── MAJ search ── */
         .maj-search-bar { padding:8px 0 4px; }
