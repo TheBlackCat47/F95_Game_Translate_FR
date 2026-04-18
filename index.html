@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<!-- Dernière mise à jour : 18/04/2026 18:30:05 -->
+<!-- Dernière mise à jour : 18/04/2026 18:42:38 -->
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -18,7 +18,10 @@
                 <img src="./assets/logo/gtf95.png" alt="Game Translate FR">
                 <h1>Game Translate FR</h1>
             </div>
-            <button class="toggle-controls" id="toggleControls" title="Afficher/masquer les filtres">Filtres</button>
+            <div class="header-actions">
+                <button id="lightToggle" title="Mode clair">☀</button>
+                <button class="toggle-controls" id="toggleControls" title="Afficher/masquer les filtres">Filtres</button>
+            </div>
         </div>
         <div class="nav-tabs">
             <button class="nav-tab active" id="tabJeux">Jeux</button>
@@ -56,6 +59,11 @@
         <div class="stats" id="stats"></div>
     </header>
 
+    <div class="news-banner" id="newsBanner" style="display:none">
+        <span class="news-banner-text" id="newsBannerText"></span>
+        <button class="news-banner-see" id="newsBannerSee">Voir les MAJ</button>
+        <button class="news-banner-close" id="newsBannerClose" title="Fermer">✕</button>
+    </div>
     <div id="active-tags-bar"></div>
     <div class="grid" id="grid">
         <div id="loading" class="skeleton-grid" aria-hidden="true"></div>
@@ -65,6 +73,16 @@
     <div class="maj-panel" id="majPanel">
         <div class="maj-search-bar">
             <input type="text" id="majSearch" placeholder="Filtrer les mises à jour...">
+        </div>
+        <div class="maj-controls">
+            <div class="maj-type-filters" id="majTypeFilters">
+                <button class="maj-type-btn active" data-type="">Tous</button>
+                <button class="maj-type-btn" data-type="ajout">Ajouts</button>
+                <button class="maj-type-btn" data-type="maj">MAJ</button>
+                <button class="maj-type-btn" data-type="other">Autres</button>
+            </div>
+            <button class="maj-group-btn" id="majGroupToggle">Par semaine</button>
+            <span class="maj-count" id="majCount"></span>
         </div>
         <div class="maj-loading" id="majLoading">Chargement des mises &agrave; jour...</div>
         <div id="majContent"></div>
@@ -76,8 +94,14 @@
     </div>
 
     <div class="trad-panel" id="tradPanel">
-        <div class="trad-search-bar-wrap">
+        <div class="trad-controls">
             <input type="text" id="tradSearch" placeholder="Rechercher un contributeur...">
+            <select id="tradSort">
+                <option value="total">Tri: Total</option>
+                <option value="trad">Tri: Traductions</option>
+                <option value="relect">Tri: Relectures</option>
+                <option value="alpha">Tri: A–Z</option>
+            </select>
         </div>
         <div class="trad-loading" id="tradLoading">Chargement des contributeurs...</div>
         <div class="trad-grid" id="tradGrid"></div>
@@ -131,16 +155,18 @@
             <button class="modal-close" onclick="closeGameModal()">✕</button>
             <button class="modal-nav modal-prev" id="modalPrev" title="Précédent">‹</button>
             <button class="modal-nav modal-next" id="modalNext" title="Suivant">›</button>
-            <div class="modal-img" id="modal-img"></div>
-            <div class="modal-body">
-                <div class="modal-title" id="modal-title"></div>
-                <div class="modal-meta"  id="modal-meta"></div>
-                <div class="modal-info"  id="modal-info"></div>
-                <div class="modal-links" id="modal-links"></div>
-                <div class="modal-tags"  id="modal-tags"></div>
-                <div class="modal-history" id="modal-history">
-                    <div class="modal-history-title">Dernières mises à jour</div>
-                    <div class="modal-history-list" id="modal-history-list"></div>
+            <div class="modal-content" id="modal-content">
+                <div class="modal-img" id="modal-img"></div>
+                <div class="modal-body">
+                    <div class="modal-title" id="modal-title"></div>
+                    <div class="modal-meta"  id="modal-meta"></div>
+                    <div class="modal-info"  id="modal-info"></div>
+                    <div class="modal-links" id="modal-links"></div>
+                    <div class="modal-tags"  id="modal-tags"></div>
+                    <div class="modal-history" id="modal-history">
+                        <div class="modal-history-title">Dernières mises à jour</div>
+                        <div class="modal-history-list" id="modal-history-list"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -219,6 +245,7 @@
     let tradLoaded = false;
     let dataSource = 'cache';
     let lastSyncLabel = '';
+    let pendingGameId = new URLSearchParams(location.search).get('game');
 
     // ── Progress bar ─────────────────────────────────────────────────────────
     const pgbar = document.getElementById('pgbar');
@@ -497,10 +524,13 @@
             const data = await res.json();
             if (!data || !data.updated_at) return;
             const d = new Date(data.updated_at);
-            lastSyncLabel = 'Dernière mise à jour : ' + d.toLocaleString('fr-FR', {
+            const label = d.toLocaleString('fr-FR', {
                 day: '2-digit', month: '2-digit', year: 'numeric',
                 hour: '2-digit', minute: '2-digit'
             });
+            lastSyncLabel = 'Dernière mise à jour : ' + label;
+            const footerSync = document.getElementById('footer-sync');
+            if (footerSync) footerSync.textContent = 'Mise à jour : ' + label;
             if (GAMES_DATA.length) render();
         } catch (e) {}
     }
@@ -583,6 +613,11 @@
             hideSkeleton();
             hideProgress();
             render();
+            // Deep link ?game=ID
+            if (pendingGameId) {
+                const idx = GAMES_DATA.findIndex(g => String(g.id) === String(pendingGameId));
+                if (idx !== -1) { openGameModal(idx, GAMES_DATA); pendingGameId = null; }
+            }
             // Si l'onglet trad était en attente des données
             if (document.getElementById('tradPanel').classList.contains('visible') && !tradLoaded) fetchTrad();
         } catch (err) {
@@ -672,6 +707,22 @@
         return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     }
 
+    function avatarColor(name) {
+        let h = 0;
+        for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+        return `hsl(${Math.abs(h) % 360}, 48%, 42%)`;
+    }
+    function avatarInitials(name) {
+        const parts = name.split(/[\s_\-]+/).filter(Boolean);
+        return (parts.length >= 2 ? parts[0][0] + parts[1][0] : (parts[0] || '').slice(0, 2)).toUpperCase() || '?';
+    }
+    function statutIcon(statut) {
+        if (!statut) return '';
+        if (statut === 'EN COURS') return '▶ ';
+        if (statut === 'TERMINÉ')  return '✓ ';
+        return '✕ ';
+    }
+
     const BATCH_SIZE = 48;
     let currentFiltered = [];
     let displayedCount  = 0;
@@ -706,7 +757,8 @@
             imgWrap.dataset.src = game.image_url;
             imgWrap.dataset.alt = game.nom;
         } else {
-            imgWrap.remove();
+            imgWrap.className = 'card-no-img';
+            imgWrap.innerHTML = `<span class="card-no-img-text">${escapeHtml(game.nom)}</span>`;
         }
 
         const titleEl = card.querySelector('.card-title');
@@ -720,7 +772,7 @@
         }
 
         const statutBadge = card.querySelector('.badge-statut');
-        statutBadge.textContent = game.statut;
+        statutBadge.textContent = statutIcon(game.statut) + (game.statut || '');
         statutBadge.classList.add(statutBadgeClass(game.statut));
 
         const typeBadge = card.querySelector('.badge-type');
@@ -849,9 +901,10 @@
         const sort      = sortBy.value;
 
         currentFiltered = GAMES_DATA.filter(g => {
-            if (query && !g._nameL.includes(query)
-                      && !g._tagsL.includes(query)
-                      && !g._translatorL.includes(query)) return false;
+            if (query) {
+                const words = query.split(/\s+/).filter(Boolean);
+                if (!words.every(w => g._nameL.includes(w) || g._tagsL.includes(w) || g._translatorL.includes(w))) return false;
+            }
             if (sStatut   && g.statut       !== sStatut)   return false;
             if (sType     && g.type_moteur  !== sType)     return false;
             if (sTradType && g.type_trad    !== sTradType) return false;
@@ -932,7 +985,10 @@
     // ── Onglet MAJ (depuis API locale) ────────────────────────────────────────
 
     const MAJ_CACHE_KEY = 'gx_maj_cache';
-    let majLoaded = false;
+    const LAST_VISIT_KEY = 'gx_last_visit';
+    let majLoaded    = false;
+    let majTypeFilter = '';
+    let majGroupMode  = 'day';
 
     async function fetchMaj() {
         try {
@@ -943,6 +999,7 @@
                     renderMaj(data.entries);
                     buildRecentGamesSet(data.entries);
                     buildLastMajDateMap(data.entries);
+                    checkNewSinceLastVisit();
                     if (Date.now() - data.ts > CACHE_TTL) loadMajFromAPI();
                     return;
                 }
@@ -970,9 +1027,32 @@
             renderMaj(entries);
             buildRecentGamesSet(entries);
             buildLastMajDateMap(entries);
+            checkNewSinceLastVisit();
         } catch (err) {
             majLoading.textContent = 'Erreur de chargement des mises à jour.';
         }
+    }
+
+    function checkNewSinceLastVisit() {
+        try {
+            const last = localStorage.getItem(LAST_VISIT_KEY);
+            const now  = Date.now();
+            localStorage.setItem(LAST_VISIT_KEY, String(now));
+            if (!last || !MAJ_ENTRIES.length) return;
+            const lastDate = new Date(parseInt(last));
+            const newEntries = MAJ_ENTRIES.filter(e => {
+                if (!e.date) return false;
+                const p = e.date.split('/');
+                if (p.length !== 3) return false;
+                return new Date(+p[2], +p[1]-1, +p[0]) > lastDate;
+            });
+            if (!newEntries.length) return;
+            const games = new Set(newEntries.flatMap(e => e.games.split(',').map(g => g.trim()).filter(Boolean)));
+            const banner = document.getElementById('newsBanner');
+            document.getElementById('newsBannerText').textContent =
+                `${games.size} jeu${games.size > 1 ? 'x' : ''} mis à jour depuis votre dernière visite`;
+            banner.style.display = '';
+        } catch(e) {}
     }
 
     function formatDateFR(iso) {
@@ -988,26 +1068,50 @@
         return 'maj-type-other';
     }
 
+    function getWeekLabel(dateStr) {
+        const p = dateStr.split('/');
+        if (p.length !== 3) return dateStr;
+        const d = new Date(+p[2], +p[1]-1, +p[0]);
+        const day = d.getDay() || 7;
+        const mon = new Date(d); mon.setDate(d.getDate() - day + 1);
+        const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+        const fmt = dt => dt.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+        return `Semaine du ${fmt(mon)} au ${fmt(sun)}`;
+    }
+
     function renderMaj(entries, query) {
         majLoaded = true;
         majLoading.style.display = 'none';
         MAJ_ENTRIES = entries;
 
         const q = (query || '').toLowerCase().trim();
-        const filtered = q ? entries.filter(e =>
+        let filtered = q ? entries.filter(e =>
             e.games.toLowerCase().includes(q) ||
             e.type.toLowerCase().includes(q) ||
             e.date.includes(q)
         ) : entries;
 
+        // Filtre par type
+        if (majTypeFilter) {
+            filtered = filtered.filter(e => majTypeClass(e.type) === 'maj-type-' + majTypeFilter);
+        }
+
+        // Mise à jour du compteur
+        const countEl = document.getElementById('majCount');
+        if (countEl) countEl.textContent = `${filtered.length} entrée${filtered.length !== 1 ? 's' : ''}`;
+
+        // Groupement
+        const keyFn = majGroupMode === 'week' ? e => getWeekLabel(e.date) : e => e.date;
         const groups = [];
-        let lastDate = null;
+        const groupMap = new Map();
         for (const e of filtered) {
-            if (e.date !== lastDate) {
-                groups.push({ date: e.date, items: [] });
-                lastDate = e.date;
+            const key = keyFn(e);
+            if (!groupMap.has(key)) {
+                const g = { date: key, items: [] };
+                groups.push(g);
+                groupMap.set(key, g);
             }
-            groups[groups.length - 1].items.push(e);
+            groupMap.get(key).items.push(e);
         }
 
         const fragment = document.createDocumentFragment();
@@ -1289,18 +1393,21 @@
             modalNext.style.display = 'none';
         }
 
+        const contentEl = document.getElementById('modal-content');
         if (game.image_url) {
             imgEl.innerHTML = `<img src="${escapeHtml(game.image_url)}" referrerpolicy="no-referrer" alt="${escapeHtml(game.nom)}">`;
             imgEl.style.display = '';
+            if (contentEl) contentEl.classList.add('has-img');
         } else {
             imgEl.innerHTML = ''; imgEl.style.display = 'none';
+            if (contentEl) contentEl.classList.remove('has-img');
         }
 
         titleEl.innerHTML = game.game_url
             ? `<a href="${escapeHtml(game.game_url)}" target="_blank" rel="noopener">${escapeHtml(game.nom)}</a>`
             : escapeHtml(game.nom);
 
-        let metaHtml = `<span class="badge ${statutBadgeClass(game.statut)}">${escapeHtml(game.statut||'')}</span>`;
+        let metaHtml = `<span class="badge ${statutBadgeClass(game.statut)}">${statutIcon(game.statut)}${escapeHtml(game.statut||'')}</span>`;
         if (game.type_moteur) metaHtml += `<span class="badge badge-type">${escapeHtml(game.type_moteur)}</span>`;
         if (game.type_trad)   metaHtml += `<span class="badge badge-trad-type">${escapeHtml(game.type_trad)}</span>`;
         if (game.statut !== 'ABANDONNÉ' && game.version && game.trad_version && game.version !== game.trad_version)
@@ -1329,6 +1436,24 @@
             linksHtml += `<span class="btn btn-integree">${escapeHtml(game.lien_trad)}</span>`;
         }
         linksEl.innerHTML = linksHtml;
+
+        // Bouton partager
+        if (game.id) {
+            const shareBtn = document.createElement('button');
+            shareBtn.className = 'modal-share-btn';
+            shareBtn.textContent = '🔗 Copier le lien';
+            shareBtn.addEventListener('click', () => {
+                const u = new URL(location.href);
+                u.search = `?game=${game.id}`;
+                u.hash = '';
+                navigator.clipboard.writeText(u.toString()).then(() => {
+                    shareBtn.textContent = '✓ Lien copié !';
+                    shareBtn.classList.add('copied');
+                    setTimeout(() => { shareBtn.textContent = '🔗 Copier le lien'; shareBtn.classList.remove('copied'); }, 2000);
+                }).catch(() => {});
+            });
+            linksEl.appendChild(shareBtn);
+        }
 
         // Historique MAJ
         const histEl = document.getElementById('modal-history-list');
@@ -1366,6 +1491,11 @@
         if (e.key === 'ArrowRight' && document.getElementById('game-modal').classList.contains('visible')) {
             if (modalNavIdx < modalNavList.length - 1) { modalNavIdx++; openGameModal(modalNavIdx); }
         }
+        if (e.key === '/' && !e.target.matches('input, select, textarea')) {
+            e.preventDefault();
+            switchTab('jeux');
+            setTimeout(() => { searchInput.focus(); searchInput.select(); }, 40);
+        }
     });
 
     // ── Onglet Traducteurs / Relecteurs ──────────────────────────────────────
@@ -1400,13 +1530,22 @@
         tradLoaded = true;
     }
 
+    let tradSortMode = 'total';
+
     function renderTrad(query) {
         const q = (query || '').toLowerCase().trim();
-        const filtered = q ? TRAD_DATA.filter(t => (t.nom || '').toLowerCase().includes(q)) : TRAD_DATA;
-        const grid = document.getElementById('tradGrid');
-        grid.innerHTML = '';
+        let filtered = q ? TRAD_DATA.filter(t => (t.nom || '').toLowerCase().includes(q)) : [...TRAD_DATA];
+
+        // Tri
+        if (tradSortMode === 'trad')   filtered.sort((a, b) => b.nb_trad - a.nb_trad);
+        else if (tradSortMode === 'relect') filtered.sort((a, b) => b.nb_relecture - a.nb_relecture);
+        else if (tradSortMode === 'alpha')  filtered.sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+        else filtered.sort((a, b) => (b.nb_trad + b.nb_relecture) - (a.nb_trad + a.nb_relecture));
+
+        const gridEl = document.getElementById('tradGrid');
+        gridEl.innerHTML = '';
         if (!filtered.length) {
-            grid.innerHTML = '<div style="color:#666;padding:40px 0;text-align:center;grid-column:1/-1">Aucun contributeur trouvé</div>';
+            gridEl.innerHTML = '<div style="color:#666;padding:40px 0;text-align:center;grid-column:1/-1">Aucun contributeur trouvé</div>';
             return;
         }
         const fragment = document.createDocumentFragment();
@@ -1414,6 +1553,7 @@
             const card = document.createElement('div');
             card.className = 'trad-card';
             card.innerHTML = `
+                <div class="trad-avatar" style="background:${avatarColor(t.nom)}">${escapeHtml(avatarInitials(t.nom))}</div>
                 <div class="trad-card-name">${escapeHtml(t.nom)}</div>
                 <div class="trad-card-stats">
                     <div class="trad-stat">
@@ -1428,7 +1568,7 @@
             card.addEventListener('click', () => openTradModal(t));
             fragment.appendChild(card);
         }
-        grid.appendChild(fragment);
+        gridEl.appendChild(fragment);
     }
 
     function openTradModal(trad) {
@@ -1638,6 +1778,8 @@
             tab = 'jeux';
             tabJeux.classList.add('active');
             grid.style.display       = '';
+            grid.classList.add('fade-in');
+            setTimeout(() => grid.classList.remove('fade-in'), 250);
             controlsEl.style.display = '';
             if (controlsCollapsed) controlsEl.classList.add('collapsed');
             stats.style.display      = '';
@@ -1691,10 +1833,13 @@
     sortBy.addEventListener('change',       render);
     resetBtn.addEventListener('click',      resetFilters);
 
-    // Tag chips event delegation (multi-sélection)
+    // Tag chips + clic carte → modal
     grid.addEventListener('click', e => {
         const chip = e.target.closest('.tag-chip');
-        if (chip) toggleTag(chip.dataset.tag);
+        if (chip) { toggleTag(chip.dataset.tag); return; }
+        if (e.target.closest('a') || e.target.closest('button')) return;
+        const card = e.target.closest('.card[data-gidx]');
+        if (card) openGameModal(parseInt(card.dataset.gidx), currentFiltered);
     });
 
     // Active tags bar — retrait des tags
@@ -1727,6 +1872,51 @@
     majSearchInput.addEventListener('input', () => {
         clearTimeout(majSearchTimer);
         majSearchTimer = setTimeout(renderMajFiltered, 200);
+    });
+
+    // MAJ filter par type
+    document.getElementById('majTypeFilters').addEventListener('click', e => {
+        const btn = e.target.closest('.maj-type-btn');
+        if (!btn) return;
+        document.querySelectorAll('.maj-type-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        majTypeFilter = btn.dataset.type;
+        renderMajFiltered();
+    });
+
+    // MAJ groupement jour/semaine
+    document.getElementById('majGroupToggle').addEventListener('click', function() {
+        majGroupMode = majGroupMode === 'day' ? 'week' : 'day';
+        this.classList.toggle('active', majGroupMode === 'week');
+        this.textContent = majGroupMode === 'week' ? 'Par jour' : 'Par semaine';
+        renderMajFiltered();
+    });
+
+    // Tri traducteurs
+    document.getElementById('tradSort').addEventListener('change', function() {
+        tradSortMode = this.value;
+        if (TRAD_DATA.length) renderTrad(document.getElementById('tradSearch').value);
+    });
+
+    // Bannière nouvelles MAJ
+    document.getElementById('newsBannerSee').addEventListener('click', () => {
+        document.getElementById('newsBanner').style.display = 'none';
+        switchTab('maj');
+    });
+    document.getElementById('newsBannerClose').addEventListener('click', () => {
+        document.getElementById('newsBanner').style.display = 'none';
+    });
+
+    // Mode clair/sombre
+    const lightToggleBtn = document.getElementById('lightToggle');
+    let lightMode = localStorage.getItem('gx_light') === '1';
+    if (lightMode) { document.body.classList.add('light'); lightToggleBtn.textContent = '☾'; lightToggleBtn.title = 'Mode sombre'; }
+    lightToggleBtn.addEventListener('click', () => {
+        lightMode = !lightMode;
+        document.body.classList.toggle('light', lightMode);
+        localStorage.setItem('gx_light', lightMode ? '1' : '0');
+        lightToggleBtn.textContent = lightMode ? '☾' : '☀';
+        lightToggleBtn.title = lightMode ? 'Mode sombre' : 'Mode clair';
     });
 
     // Modal nav
@@ -1769,6 +1959,10 @@
             populateFilters();
             restoreFiltersState();
             render();
+            if (pendingGameId) {
+                const idx = GAMES_DATA.findIndex(g => String(g.id) === String(pendingGameId));
+                if (idx !== -1) { openGameModal(idx, GAMES_DATA); pendingGameId = null; }
+            }
             if (Date.now() - cached.ts > CACHE_TTL) fetchGames(true);
         } else {
             fetchGames();
@@ -1778,6 +1972,14 @@
         if (['maj', 'info', 'trad', 'stats', 'news'].includes(hash)) switchTab(hash, false);
     })();
     </script>
+
+    <footer>
+        <span id="footer-sync"></span>
+        <span class="footer-sep">·</span>
+        <a href="https://docs.google.com/spreadsheets/d/1ELRF0kpF8SoUlslX5ZXZoG4WXeWST6lN9bLws32EPfs" target="_blank" rel="noopener">Google Sheet</a>
+        <span class="footer-sep">·</span>
+        <a href="https://github.com/theblackcat47/F95_Game_Translate_FR" target="_blank" rel="noopener">GitHub</a>
+    </footer>
 
     <script data-goatcounter="https://theblackcat47.goatcounter.com/count"
             async src="//gc.zgo.at/count.js"></script>
