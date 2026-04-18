@@ -18,14 +18,44 @@ Les données proviennent d'un tableur Google Sheets maintenu par la communauté 
 
 ## ✨ Fonctionnalités
 
+### Catalogue de jeux
 | Fonctionnalité | Description |
 |---|---|
-| 🔍 **Recherche instantanée** | Par nom de jeu, tags ou traducteur |
-| 🎛️ **Filtres** | Statut, moteur de jeu (RenPy, Unity…), type de traduction |
-| 🔗 **Liens directs** | Page F95Zone et fichier de traduction (MEGA, Google Drive…) |
-| 👤 **Profil traducteur** | Lien vers la page du traducteur quand disponible |
-| 📋 **Mises à jour** | Historique des ajouts et modifications par date |
-| ℹ️ **Informations** | Liens utiles et ressources de la communauté |
+| 🔍 **Recherche par mots** | Chaque mot de la requête est cherché indépendamment (nom, tags, traducteur) |
+| 🎛️ **Filtres combinables** | Statut, moteur de jeu (RenPy, Unity…), type de traduction, traducteur — cumulables avec des tags actifs |
+| 🏷️ **Tags cliquables** | Cliquer un tag l'active comme filtre ; plusieurs tags peuvent être cumulés |
+| 🔗 **Liens directs** | Page F95Zone et fichier de traduction (MEGA, Google Drive, Proton Drive…) |
+| 🖼️ **Placeholder visuel** | Les jeux sans image affichent leur titre en fond de carte |
+| 🔔 **Badge NOUVEAU** | Les jeux mis à jour dans les 7 derniers jours sont signalés |
+| ⚠️ **Badge Retard** | Jeux dont la version traduite est en retard sur le jeu original |
+| 🖱️ **Clic carte → détail** | Cliquer une carte ouvre le modal de détail avec navigation clavier (←/→) |
+| 🔗 **Partager un jeu** | Bouton dans le modal pour copier un lien direct `?game=ID` |
+| ↔️ **Vue grille / liste** | Bascule entre vue grille et vue liste compacte |
+| ⌨️ **Raccourci `/`** | Focus instantané sur la barre de recherche depuis n'importe quel onglet |
+
+### Mises à jour
+| Fonctionnalité | Description |
+|---|---|
+| 📋 **Historique** | Toutes les entrées triées par date, avec liens vers les jeux |
+| 🔎 **Filtre par type** | Boutons Tous / Ajouts / MAJ / Autres avec compteur d'entrées |
+| 📅 **Groupement par semaine** | Bascule entre vue par jour et vue par semaine |
+
+### Traducteurs / Relecteurs
+| Fonctionnalité | Description |
+|---|---|
+| 👤 **Avatars initiales** | Chaque traducteur a un avatar coloré généré depuis son pseudo |
+| 🔢 **Tri configurable** | Par total de contributions, traductions seules, relectures, ou alphabétique |
+| 📄 **Profil détaillé** | Modal listant tous les jeux traduits et relus par contributeur |
+
+### Interface générale
+| Fonctionnalité | Description |
+|---|---|
+| ☀️ **Mode clair / sombre** | Bascule persistante en localStorage |
+| 📢 **Bannière nouveautés** | À la prochaine visite : signale combien de jeux ont été mis à jour depuis |
+| 🔗 **URL partageables** | Tous les filtres actifs sont encodés dans l'URL ; les onglets ont un hash |
+| 📰 **F95 — News** | Flux RSS F95Zone mis en cache avec images, catégories et métadonnées |
+| 📊 **Statistiques** | Graphiques interactifs : répartition statut/moteur/traducteur, activité mensuelle |
+| 🔄 **Cache localStorage** | Données mises en cache 5 min pour un chargement instantané au retour |
 
 ---
 
@@ -69,4 +99,4 @@ Il s'appuie également sur le travail bénévole de tous les traducteurs de la c
 
 ---
 
-*Données mises à jour automatiquement — dernière synchronisation visible dans le code source de la page.*
+*Données mises à jour automatiquement — date de dernière synchronisation visible dans le footer de la page.*
