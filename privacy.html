@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politique de Confidentialité — Game Translate FR</title>
+    <link rel="icon" type="image/png" href="./assets/logo/gtf95.png">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg:       #0f0f1a;
+            --surface:  #1a1a2e;
+            --surface2: #16213e;
+            --border:   #1f2d40;
+            --text:     #e0e0e0;
+            --muted:    #64748b;
+            --accent:   #e94560;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 15px;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+        /* ── Header ── */
+        header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-bottom: 2px solid #0f3460;
+            padding: 18px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .header-brand img {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
+        .header-brand span {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .header-back {
+            font-size: .82rem;
+            color: var(--muted);
+            text-decoration: none;
+            border: 1px solid #334155;
+            padding: 5px 14px;
+            border-radius: 6px;
+            transition: border-color .2s, color .2s;
+        }
+        .header-back:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── Layout ── */
+        main {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 48px 32px 64px;
+        }
+
+        /* ── Page title ── */
+        .page-title {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+        .page-meta {
+            font-size: .82rem;
+            color: var(--muted);
+            margin-bottom: 36px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* ── Sections ── */
+        section {
+            margin-bottom: 36px;
+        }
+        h2 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 12px;
+            padding-left: 12px;
+            border-left: 3px solid var(--accent);
+        }
+        p { color: #b0b8c8; margin-bottom: 10px; }
+        p:last-child { margin-bottom: 0; }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 10px;
+        }
+        ul li {
+            color: #b0b8c8;
+            padding: 3px 0 3px 18px;
+            position: relative;
+        }
+        ul li::before {
+            content: '·';
+            position: absolute;
+            left: 6px;
+            color: var(--accent);
+            font-weight: 700;
+        }
+        a { color: #6ea8fe; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .highlight-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+        }
+        .highlight-box p { margin: 0; }
+
+        .tag {
+            display: inline-block;
+            background: #10b98118;
+            color: #10b981;
+            border: 1px solid #10b98133;
+            border-radius: 4px;
+            padding: 1px 8px;
+            font-size: .75rem;
+            font-weight: 700;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .contact-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 18px;
+        }
+        .contact-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: #5865F222;
+            border: 1px solid #5865F244;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .contact-icon svg { width: 18px; height: 18px; fill: #5865F2; }
+        .contact-name { font-size: .9rem; font-weight: 600; color: #e2e8f0; }
+        .contact-sub  { font-size: .75rem; color: var(--muted); }
+
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            padding: 20px 32px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: .75rem;
+        }
+        footer a { color: #475569; }
+        footer a:hover { color: #64748b; }
+        .footer-sep { margin: 0 8px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a class="header-brand" href="./index.html">
+        <img src="./assets/logo/gtf95.png" alt="Game Translate FR">
+        <span>Game Translate FR</span>
+    </a>
+    <a class="header-back" href="./index.html">← Retour au catalogue</a>
+</header>
+
+<main>
+
+    <div class="page-title">Politique de Confidentialité</div>
+    <div class="page-meta">
+        Dernière mise à jour : 19 avril 2026
+        <span class="footer-sep">·</span>
+        Applicable à : <strong style="color:#e2e8f0">Game Translate FR</strong> (site web &amp; bot Discord)
+    </div>
+
+    <section>
+        <h2>1. Présentation</h2>
+        <p>
+            <strong style="color:#e2e8f0">Game Translate FR</strong> est un projet communautaire bénévole qui recense les traductions françaises de jeux disponibles sur <a href="https://f95zone.to" target="_blank" rel="noopener">F95Zone</a>.
+            Ce projet comprend un site web statique hébergé sur GitHub Pages, un bot Discord d'information et un service de synchronisation automatique des données.
+        </p>
+        <p>
+            La présente politique décrit comment nous traitons les données dans le cadre de ce projet.
+            L'utilisation du site et du bot Discord implique l'acceptation de cette politique.
+        </p>
+    </section>
+
+    <section>
+        <h2>2. Données collectées par le site web</h2>
+        <div class="highlight-box">
+            <p><span class="tag">✓ Sans compte</span> Le site web ne nécessite aucune inscription, aucun compte et aucune connexion.</p>
+        </div>
+        <p>Le site web ne collecte <strong style="color:#e2e8f0">aucune donnée personnelle identifiable</strong>. Nous n'utilisons pas de cookies de traçage ni de formulaires.</p>
+        <p>Les préférences locales (filtres, mode clair/sombre) sont stockées uniquement dans le <code style="background:#1e293b;padding:1px 5px;border-radius:3px;font-size:.85em">localStorage</code> de votre navigateur et ne sont jamais transmises à nos serveurs.</p>
+    </section>
+
+    <section>
+        <h2>3. Analytique (mesure d'audience)</h2>
+        <p>Le site utilise deux outils d'analyse d'audience respectueux de la vie privée :</p>
+        <ul>
+            <li>
+                <strong style="color:#e2e8f0">Umami</strong> (<a href="https://umami.is" target="_blank" rel="noopener">umami.is</a>) —
+                collecte des statistiques anonymes (pages vues, pays, navigateur). Aucun cookie déposé, aucune donnée personnelle stockée, conforme RGPD. Hébergé sur cloud.umami.is.
+            </li>
+            <li>
+                <strong style="color:#e2e8f0">GoatCounter</strong> (<a href="https://www.goatcounter.com" target="_blank" rel="noopener">goatcounter.com</a>) —
+                compteur de visites anonyme, sans cookies, sans suivi inter-sites.
+            </li>
+        </ul>
+        <p>Aucun de ces outils ne permet d'identifier personnellement un visiteur.</p>
+    </section>
+
+    <section>
+        <h2>4. Hébergement et infrastructure</h2>
+        <ul>
+            <li>
+                <strong style="color:#e2e8f0">GitHub Pages</strong> — Le site est hébergé via GitHub Pages (Microsoft). Les accès génèrent des logs serveurs standard (adresse IP, user-agent) conservés par GitHub conformément à leur <a href="https://docs.github.com/fr/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">politique de confidentialité</a>.
+            </li>
+            <li>
+                <strong style="color:#e2e8f0">Serveur de synchronisation</strong> — Un serveur privé interroge l'API Google Sheets toutes les 15 minutes pour mettre à jour le catalogue. Ce serveur ne traite aucune donnée relative aux visiteurs.
+            </li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>5. Sources de données du catalogue</h2>
+        <p>Les données affichées proviennent de :</p>
+        <ul>
+            <li><strong style="color:#e2e8f0">Google Sheets</strong> — Tableur communautaire maintenu par des bénévoles. Ces données sont publiques et accessibles à tous.</li>
+            <li><strong style="color:#e2e8f0">F95Zone</strong> — Images de jaquette et métadonnées des jeux récupérées depuis f95zone.to via son flux RSS public.</li>
+        </ul>
+        <p>Ces données concernent des œuvres (jeux, traductions) et non des personnes. Les noms de traducteurs présents dans le catalogue sont des pseudonymes choisis volontairement par leurs auteurs pour être publics.</p>
+    </section>
+
+    <section>
+        <h2>6. Bot Discord</h2>
+        <p>Le bot Discord associé à ce projet (bot de notification communautaire) opère dans les serveurs Discord où il est invité. Voici ce qu'il collecte et traite :</p>
+
+        <p><strong style="color:#e2e8f0">Ce que le bot collecte :</strong></p>
+        <ul>
+            <li>Les identifiants de serveurs (guild ID) et de salons (channel ID) pour l'envoi des notifications.</li>
+            <li>Aucun message privé, aucun historique de conversation, aucun contenu utilisateur.</li>
+        </ul>
+
+        <p><strong style="color:#e2e8f0">Ce que le bot ne collecte pas :</strong></p>
+        <ul>
+            <li>Noms d'utilisateurs, adresses e-mail, données de profil Discord.</li>
+            <li>Messages, réactions ou activités des membres du serveur.</li>
+            <li>Données biométriques ou de localisation.</li>
+        </ul>
+
+        <p><strong style="color:#e2e8f0">Utilisation des données Discord :</strong></p>
+        <ul>
+            <li>Les identifiants de serveurs/salons sont utilisés exclusivement pour envoyer les notifications de mises à jour du catalogue.</li>
+            <li>Ces identifiants ne sont jamais partagés avec des tiers.</li>
+            <li>La suppression du bot du serveur entraîne la suppression de toute configuration associée.</li>
+        </ul>
+
+        <p><strong style="color:#e2e8f0">Durée de conservation :</strong> Les données sont conservées tant que le bot est présent dans le serveur. Elles sont supprimées sur simple demande ou lors du retrait du bot.</p>
+    </section>
+
+    <section>
+        <h2>7. Vos droits</h2>
+        <p>Conformément au Règlement Général sur la Protection des Données (RGPD), vous disposez des droits suivants :</p>
+        <ul>
+            <li><strong style="color:#e2e8f0">Accès</strong> — droit de savoir quelles données vous concernant sont traitées.</li>
+            <li><strong style="color:#e2e8f0">Rectification</strong> — droit de faire corriger des données inexactes.</li>
+            <li><strong style="color:#e2e8f0">Suppression</strong> — droit à l'effacement des données vous concernant.</li>
+            <li><strong style="color:#e2e8f0">Opposition</strong> — droit de vous opposer au traitement de vos données.</li>
+        </ul>
+        <p>Pour exercer ces droits, contactez-nous via Discord (voir section 8).</p>
+    </section>
+
+    <section>
+        <h2>8. Contact</h2>
+        <p>Pour toute question relative à la confidentialité ou pour exercer vos droits :</p>
+        <div class="contact-card">
+            <div class="contact-icon">
+                <svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+            </div>
+            <div>
+                <div class="contact-name">Discord — Serveur communautaire Game Translate FR</div>
+                <div class="contact-sub"><a href="https://discord.gg/QXd9kr3ewW" target="_blank" rel="noopener">discord.gg/QXd9kr3ewW</a></div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>9. Modifications</h2>
+        <p>
+            Cette politique peut être mise à jour à tout moment. La date de dernière révision est indiquée en haut de la page.
+            Les modifications importantes seront annoncées sur le serveur Discord communautaire.
+        </p>
+    </section>
+
+</main>
+
+<footer>
+    <span>© 2026 Game Translate FR — Projet communautaire bénévole</span>
+    <span class="footer-sep">·</span>
+    <a href="./terms.html">Conditions d'Utilisation</a>
+    <span class="footer-sep">·</span>
+    <a href="./index.html">Retour au catalogue</a>
+</footer>
+
+</body>
+</html>

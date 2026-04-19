@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conditions d'Utilisation — Game Translate FR</title>
+    <link rel="icon" type="image/png" href="./assets/logo/gtf95.png">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg:       #0f0f1a;
+            --surface:  #1a1a2e;
+            --surface2: #16213e;
+            --border:   #1f2d40;
+            --text:     #e0e0e0;
+            --muted:    #64748b;
+            --accent:   #e94560;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 15px;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+        /* ── Header ── */
+        header {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-bottom: 2px solid #0f3460;
+            padding: 18px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .header-brand img {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
+        .header-brand span {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .header-back {
+            font-size: .82rem;
+            color: var(--muted);
+            text-decoration: none;
+            border: 1px solid #334155;
+            padding: 5px 14px;
+            border-radius: 6px;
+            transition: border-color .2s, color .2s;
+        }
+        .header-back:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── Layout ── */
+        main {
+            max-width: 820px;
+            margin: 0 auto;
+            padding: 48px 32px 64px;
+        }
+
+        /* ── Page title ── */
+        .page-title {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 6px;
+        }
+        .page-meta {
+            font-size: .82rem;
+            color: var(--muted);
+            margin-bottom: 36px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* ── Sections ── */
+        section { margin-bottom: 36px; }
+        h2 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 12px;
+            padding-left: 12px;
+            border-left: 3px solid var(--accent);
+        }
+        p { color: #b0b8c8; margin-bottom: 10px; }
+        p:last-child { margin-bottom: 0; }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 10px;
+        }
+        ul li {
+            color: #b0b8c8;
+            padding: 3px 0 3px 18px;
+            position: relative;
+        }
+        ul li::before {
+            content: '·';
+            position: absolute;
+            left: 6px;
+            color: var(--accent);
+            font-weight: 700;
+        }
+        a { color: #6ea8fe; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .warning-box {
+            background: #7c290022;
+            border: 1px solid #f97316aa;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .warning-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+        .warning-box p { color: #fdba74; margin: 0; }
+
+        .highlight-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+        }
+        .highlight-box p { margin: 0; }
+
+        .contact-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 18px;
+        }
+        .contact-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: #5865F222;
+            border: 1px solid #5865F244;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .contact-icon svg { width: 18px; height: 18px; fill: #5865F2; }
+        .contact-name { font-size: .9rem; font-weight: 600; color: #e2e8f0; }
+        .contact-sub  { font-size: .75rem; color: var(--muted); }
+
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            padding: 20px 32px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: .75rem;
+        }
+        footer a { color: #475569; }
+        footer a:hover { color: #64748b; }
+        .footer-sep { margin: 0 8px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a class="header-brand" href="./index.html">
+        <img src="./assets/logo/gtf95.png" alt="Game Translate FR">
+        <span>Game Translate FR</span>
+    </a>
+    <a class="header-back" href="./index.html">← Retour au catalogue</a>
+</header>
+
+<main>
+
+    <div class="page-title">Conditions d'Utilisation</div>
+    <div class="page-meta">
+        Dernière mise à jour : 19 avril 2026
+        <span class="footer-sep">·</span>
+        Applicable à : <strong style="color:#e2e8f0">Game Translate FR</strong> (site web &amp; bot Discord)
+    </div>
+
+    <section>
+        <h2>1. Objet et acceptation</h2>
+        <p>
+            Les présentes Conditions d'Utilisation (ci-après « CGU ») régissent l'accès et l'utilisation du site web
+            <strong style="color:#e2e8f0">Game Translate FR</strong>, accessible à l'adresse
+            <a href="https://theblackcat47.github.io/F95_Game_Translate_FR/" target="_blank" rel="noopener">theblackcat47.github.io/F95_Game_Translate_FR</a>,
+            ainsi que le bot Discord associé.
+        </p>
+        <p>
+            L'accès au site ou l'invitation du bot Discord dans un serveur vaut acceptation pleine et entière des présentes CGU.
+            Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser le service.
+        </p>
+    </section>
+
+    <section>
+        <h2>2. Description du service</h2>
+        <p>
+            Game Translate FR est un projet communautaire bénévole qui propose :
+        </p>
+        <ul>
+            <li>Un catalogue consultable des traductions françaises de jeux disponibles sur <a href="https://f95zone.to" target="_blank" rel="noopener">F95Zone</a>.</li>
+            <li>Un historique des mises à jour et ajouts de traductions.</li>
+            <li>Un bot Discord permettant de recevoir des notifications de mises à jour dans un serveur.</li>
+        </ul>
+        <p>
+            Le service est fourni <strong style="color:#e2e8f0">gratuitement</strong>, sans garantie de disponibilité continue, et peut être modifié ou interrompu à tout moment sans préavis.
+        </p>
+    </section>
+
+    <section>
+        <h2>3. Avertissement — Contenu adulte</h2>
+        <div class="warning-box">
+            <span class="warning-icon">⚠️</span>
+            <p>
+                Ce site répertorie des traductions de jeux provenant de F95Zone, une plateforme dédiée à des jeux pour <strong>adultes (18+)</strong>.
+                En accédant à ce site, vous confirmez avoir l'âge légal requis dans votre pays de résidence pour consulter ce type de contenu.
+                Ce service n'est pas destiné aux mineurs.
+            </p>
+        </div>
+        <p>
+            Game Translate FR n'héberge aucun contenu de jeu. Il s'agit uniquement d'un répertoire de liens vers des ressources tierces (F95Zone, plateformes de téléchargement).
+            La responsabilité du contenu des jeux incombe exclusivement aux créateurs et traducteurs.
+        </p>
+    </section>
+
+    <section>
+        <h2>4. Propriété intellectuelle</h2>
+        <p>
+            Les noms, images et descriptions de jeux sont la propriété de leurs créateurs respectifs.
+            Les traductions sont l'œuvre des traducteurs bénévoles de la communauté francophone F95Zone.
+        </p>
+        <p>
+            Le code source de ce projet est disponible sur
+            <a href="https://github.com/theblackcat47/F95_Game_Translate_FR" target="_blank" rel="noopener">GitHub</a>.
+            Les données du catalogue proviennent du
+            <a href="https://docs.google.com/spreadsheets/d/1ELRF0kpF8SoUlslX5ZXZoG4WXeWST6lN9bLws32EPfs" target="_blank" rel="noopener">tableur communautaire Google Sheets</a>
+            créé et maintenu par <strong style="color:#e2e8f0">K3652</strong> et les contributeurs de la communauté.
+        </p>
+        <p>
+            Toute reproduction ou exploitation commerciale du contenu de ce site sans autorisation préalable est interdite.
+        </p>
+    </section>
+
+    <section>
+        <h2>5. Utilisation autorisée</h2>
+        <p>Vous êtes autorisé à :</p>
+        <ul>
+            <li>Consulter le catalogue et rechercher des traductions.</li>
+            <li>Partager des liens vers le site.</li>
+            <li>Inviter le bot Discord dans votre serveur communautaire à des fins de notification.</li>
+        </ul>
+        <p>Il vous est interdit de :</p>
+        <ul>
+            <li>Utiliser le service à des fins commerciales sans accord préalable.</li>
+            <li>Scraper ou aspirer automatiquement les données du site de manière abusive.</li>
+            <li>Utiliser le bot Discord pour du spam, du harcèlement ou toute activité contraire aux <a href="https://discord.com/terms" target="_blank" rel="noopener">Conditions d'Utilisation de Discord</a>.</li>
+            <li>Tenter d'accéder à l'interface d'administration ou aux systèmes internes du service.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>6. Bot Discord — Conditions spécifiques</h2>
+        <p>
+            En invitant le bot Discord dans votre serveur, vous acceptez les conditions suivantes :
+        </p>
+        <ul>
+            <li>Le bot peut envoyer des messages dans les salons pour lesquels il est configuré.</li>
+            <li>Vous êtes responsable du bon usage du bot au sein de votre serveur et du respect des règles Discord.</li>
+            <li>Nous nous réservons le droit de retirer le bot d'un serveur en cas d'utilisation abusive, sans préavis.</li>
+            <li>Le retrait du bot de votre serveur est possible à tout moment via les paramètres Discord de votre serveur.</li>
+        </ul>
+        <div class="highlight-box">
+            <p>
+                Le bot ne lit pas vos messages, n'accède pas à l'historique de vos conversations et ne collecte aucune donnée personnelle des membres.
+                Pour plus de détails, consultez notre <a href="./privacy.html">Politique de Confidentialité</a>.
+            </p>
+        </div>
+    </section>
+
+    <section>
+        <h2>7. Limitation de responsabilité</h2>
+        <p>
+            Game Translate FR est un projet bénévole fourni « tel quel », sans garantie d'aucune sorte, expresse ou implicite.
+            En particulier, nous ne garantissons pas :
+        </p>
+        <ul>
+            <li>L'exactitude, l'exhaustivité ou l'actualité des informations du catalogue.</li>
+            <li>La disponibilité continue ou l'absence d'interruption du service.</li>
+            <li>La sécurité ou la disponibilité des liens vers des sites tiers (F95Zone, plateformes de téléchargement).</li>
+        </ul>
+        <p>
+            En aucun cas l'équipe de Game Translate FR ne pourra être tenue responsable de dommages directs ou indirects liés à l'utilisation ou à l'impossibilité d'utiliser le service.
+        </p>
+    </section>
+
+    <section>
+        <h2>8. Liens externes</h2>
+        <p>
+            Le site contient des liens vers des sites tiers (F95Zone, MEGA, Google Drive, Proton Drive, etc.).
+            Ces liens sont fournis à titre informatif uniquement.
+            Game Translate FR n'est pas responsable du contenu, des pratiques de confidentialité ou de la disponibilité de ces sites.
+            L'accès à ces sites se fait sous votre entière responsabilité.
+        </p>
+    </section>
+
+    <section>
+        <h2>9. Modifications des CGU</h2>
+        <p>
+            Nous nous réservons le droit de modifier les présentes CGU à tout moment.
+            La date de dernière révision est indiquée en haut de cette page.
+            La poursuite de l'utilisation du service après modification vaut acceptation des nouvelles CGU.
+        </p>
+        <p>
+            Les modifications importantes seront annoncées sur le serveur Discord communautaire.
+        </p>
+    </section>
+
+    <section>
+        <h2>10. Contact</h2>
+        <p>Pour toute question concernant ces conditions d'utilisation :</p>
+        <div class="contact-card">
+            <div class="contact-icon">
+                <svg viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+            </div>
+            <div>
+                <div class="contact-name">Discord — Serveur communautaire Game Translate FR</div>
+                <div class="contact-sub"><a href="https://discord.gg/QXd9kr3ewW" target="_blank" rel="noopener">discord.gg/QXd9kr3ewW</a></div>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <span>© 2026 Game Translate FR — Projet communautaire bénévole</span>
+    <span class="footer-sep">·</span>
+    <a href="./privacy.html">Politique de Confidentialité</a>
+    <span class="footer-sep">·</span>
+    <a href="./index.html">Retour au catalogue</a>
+</footer>
+
+</body>
+</html>
